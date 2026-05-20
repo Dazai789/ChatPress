@@ -1,8 +1,8 @@
-# ChatPress API
+# chatpress_V1 API
 
 ## 1. 概述
 
-本文档定义 ChatPress 的 MVP API。
+本文档定义 chatpress_V1 的 MVP API。
 
 API 需要支持一个简单流程：
 
