@@ -79,8 +79,6 @@ GET    /p/{slug}
 .
 ├── README.md
 ├── pom.xml
-├── mvnw
-├── mvnw.cmd
 ├── src/
 │   ├── main/
 │   └── test/

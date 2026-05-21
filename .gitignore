@@ -3,6 +3,8 @@
 # IDE
 .idea/
 *.iml
+*.ipr
+*.iws
 
 # Java build output
 target/
