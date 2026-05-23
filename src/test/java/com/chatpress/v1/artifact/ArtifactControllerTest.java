@@ -44,6 +44,14 @@ class ArtifactControllerTest {
     }
 
     @Test
+    void rejectInvalidRequest() throws Exception {
+        createArtifact("", "invalid-request", "# Invalid Request")
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
+                .andExpect(jsonPath("$.message").value("Request validation failed"));
+    }
+
+    @Test
     void getArtifactById() throws Exception {
         MvcResult result = createArtifact("Backend Notes", "backend-notes", "# Backend Notes")
                 .andExpect(status().isCreated())
