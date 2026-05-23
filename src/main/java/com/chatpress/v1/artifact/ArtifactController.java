@@ -44,15 +44,14 @@ public class ArtifactController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ArtifactResponse> getArtifact(@PathVariable Long id) {
+    public ArtifactResponse getArtifact(@PathVariable Long id) {
         return artifactService.getArtifact(id)
                 .map(ArtifactResponse::from)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ArtifactNotFoundException(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ArtifactResponse> updateArtifact(
+    public ArtifactResponse updateArtifact(
             @PathVariable Long id,
             @Valid @RequestBody ArtifactRequest request
     ) {
@@ -63,14 +62,13 @@ public class ArtifactController {
                         request.sourceContent()
                 )
                 .map(ArtifactResponse::from)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new ArtifactNotFoundException(id));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteArtifact(@PathVariable Long id) {
         if (!artifactService.deleteArtifact(id)) {
-            return ResponseEntity.notFound().build();
+            throw new ArtifactNotFoundException(id);
         }
 
         return ResponseEntity.noContent().build();

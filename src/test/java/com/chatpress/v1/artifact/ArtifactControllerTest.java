@@ -52,6 +52,14 @@ class ArtifactControllerTest {
     }
 
     @Test
+    void returnNotFoundForMissingArtifact() throws Exception {
+        mockMvc.perform(get("/api/artifacts/{id}", 999999))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ARTIFACT_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Artifact not found: 999999"));
+    }
+
+    @Test
     void getArtifactById() throws Exception {
         MvcResult result = createArtifact("Backend Notes", "backend-notes", "# Backend Notes")
                 .andExpect(status().isCreated())

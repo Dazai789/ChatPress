@@ -9,6 +9,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    @ExceptionHandler(ArtifactNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleArtifactNotFound(ArtifactNotFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiErrorResponse("ARTIFACT_NOT_FOUND", exception.getMessage()));
+    }
+
     @ExceptionHandler(DuplicateSlugException.class)
     public ResponseEntity<ApiErrorResponse> handleDuplicateSlug(DuplicateSlugException exception) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
