@@ -13,8 +13,10 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.Map;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -72,7 +74,7 @@ class ArtifactControllerTest {
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        Integer artifactId = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
+        Integer artifactId = artifactIdFrom(result);
 
         mockMvc.perform(get("/api/artifacts/{id}", artifactId))
                 .andExpect(status().isOk())
@@ -81,6 +83,42 @@ class ArtifactControllerTest {
                 .andExpect(jsonPath("$.slug").value("backend-notes"))
                 .andExpect(jsonPath("$.status").value("published"))
                 .andExpect(jsonPath("$.renderedHtml").value("<h1>Backend Notes</h1>\n"));
+    }
+
+    @Test
+    void updateArtifact() throws Exception {
+        MvcResult result = createArtifact("Old Notes", "old-notes", "# Old Notes")
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Integer artifactId = artifactIdFrom(result);
+
+        mockMvc.perform(put("/api/artifacts/{id}", artifactId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(artifactJson("Updated Notes", "updated-notes", "# Updated Notes")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(artifactId))
+                .andExpect(jsonPath("$.title").value("Updated Notes"))
+                .andExpect(jsonPath("$.slug").value("updated-notes"))
+                .andExpect(jsonPath("$.status").value("published"))
+                .andExpect(jsonPath("$.renderedHtml").value("<h1>Updated Notes</h1>\n"));
+    }
+
+    @Test
+    void deleteArtifact() throws Exception {
+        MvcResult result = createArtifact("Delete Notes", "delete-notes", "# Delete Notes")
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Integer artifactId = artifactIdFrom(result);
+
+        mockMvc.perform(delete("/api/artifacts/{id}", artifactId))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/artifacts/{id}", artifactId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ARTIFACT_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("Artifact not found: " + artifactId));
     }
 
     @Test
@@ -101,10 +139,18 @@ class ArtifactControllerTest {
     ) throws Exception {
         return mockMvc.perform(post("/api/artifacts")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of(
-                        "title", title,
-                        "slug", slug,
-                        "sourceContent", sourceContent
-                ))));
+                .content(artifactJson(title, slug, sourceContent)));
+    }
+
+    private String artifactJson(String title, String slug, String sourceContent) throws Exception {
+        return objectMapper.writeValueAsString(Map.of(
+                "title", title,
+                "slug", slug,
+                "sourceContent", sourceContent
+        ));
+    }
+
+    private Integer artifactIdFrom(MvcResult result) throws Exception {
+        return JsonPath.read(result.getResponse().getContentAsString(), "$.id");
     }
 }
