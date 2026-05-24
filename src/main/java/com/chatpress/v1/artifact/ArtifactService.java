@@ -40,6 +40,10 @@ public class ArtifactService {
         return artifactRepository.findBySlug(slug);
     }
 
+    public Optional<Artifact> getPublishedArtifactBySlug(String slug) {
+        return artifactRepository.findBySlugAndStatus(slug, Artifact.Status.PUBLISHED);
+    }
+
     public Artifact updateArtifactOrThrow(Long id, String title, String slug, String sourceContent) {
         Artifact artifact = getArtifactOrThrow(id);
         ensureSlugAvailableForUpdate(slug, artifact.getId());
@@ -47,6 +51,12 @@ public class ArtifactService {
         artifact.setSlug(slug);
         artifact.setSourceContent(sourceContent);
         artifact.setRenderedHtml(markdownRenderer.render(sourceContent));
+        return artifactRepository.save(artifact);
+    }
+
+    public Artifact updateArtifactStatusOrThrow(Long id, Artifact.Status status) {
+        Artifact artifact = getArtifactOrThrow(id);
+        artifact.setStatus(status);
         return artifactRepository.save(artifact);
     }
 

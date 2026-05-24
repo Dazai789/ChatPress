@@ -121,6 +121,22 @@ class ArtifactControllerTest {
     }
 
     @Test
+    void updateArtifactStatus() throws Exception {
+        MvcResult result = createArtifact("Status Notes", "status-notes", "# Status Notes")
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Integer artifactId = artifactIdFrom(result);
+
+        mockMvc.perform(put("/api/artifacts/{id}/status", artifactId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(statusJson("draft")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(artifactId))
+                .andExpect(jsonPath("$.status").value("draft"));
+    }
+
+    @Test
     void deleteArtifact() throws Exception {
         MvcResult result = createArtifact("Delete Notes", "delete-notes", "# Delete Notes")
                 .andExpect(status().isCreated())
@@ -151,6 +167,23 @@ class ArtifactControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<h1>Public Notes</h1>")));
     }
 
+    @Test
+    void returnNotFoundForDraftPublicPage() throws Exception {
+        MvcResult result = createArtifact("Draft Notes", "draft-notes", "# Draft Notes")
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Integer artifactId = artifactIdFrom(result);
+
+        mockMvc.perform(put("/api/artifacts/{id}/status", artifactId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(statusJson("draft")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/p/draft-notes"))
+                .andExpect(status().isNotFound());
+    }
+
     private ResultActions createArtifact(
             String title,
             String slug,
@@ -167,6 +200,10 @@ class ArtifactControllerTest {
                 "slug", slug,
                 "sourceContent", sourceContent
         ));
+    }
+
+    private String statusJson(String status) throws Exception {
+        return objectMapper.writeValueAsString(Map.of("status", status));
     }
 
     private Integer artifactIdFrom(MvcResult result) throws Exception {

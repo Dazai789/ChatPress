@@ -2,6 +2,7 @@ package com.chatpress.v1.artifact;
 
 import com.chatpress.v1.artifact.dto.ArtifactRequest;
 import com.chatpress.v1.artifact.dto.ArtifactResponse;
+import com.chatpress.v1.artifact.dto.ArtifactStatusRequest;
 import com.chatpress.v1.artifact.dto.ArtifactSummaryResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -62,6 +63,15 @@ public class ArtifactController {
                 request.slug(),
                 request.sourceContent()
         );
+        return ArtifactResponse.from(artifact);
+    }
+
+    @PutMapping("/{id}/status")
+    public ArtifactResponse updateArtifactStatus(
+            @PathVariable Long id,
+            @Valid @RequestBody ArtifactStatusRequest request
+    ) {
+        Artifact artifact = artifactService.updateArtifactStatusOrThrow(id, request.toArtifactStatus());
         return ArtifactResponse.from(artifact);
     }
 

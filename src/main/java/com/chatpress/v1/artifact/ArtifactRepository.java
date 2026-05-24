@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ArtifactRepository extends JpaRepository<Artifact, Long> {
 
     Optional<Artifact> findBySlug(String slug);
+
+    Optional<Artifact> findBySlugAndStatus(String slug, Artifact.Status status);
 }

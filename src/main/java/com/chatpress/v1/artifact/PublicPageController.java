@@ -19,7 +19,7 @@ public class PublicPageController {
 
     @GetMapping(value = "/p/{slug}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getPublicPage(@PathVariable String slug) {
-        return artifactService.getArtifactBySlug(slug)
+        return artifactService.getPublishedArtifactBySlug(slug)
                 .map(artifact -> ResponseEntity.ok(publicPageRenderer.render(artifact)))
                 .orElse(ResponseEntity.notFound().build());
     }
