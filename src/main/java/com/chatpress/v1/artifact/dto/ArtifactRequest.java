@@ -1,4 +1,4 @@
-package com.chatpress.v1.artifact;
+package com.chatpress.v1.artifact.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

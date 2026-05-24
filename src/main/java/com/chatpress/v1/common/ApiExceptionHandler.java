@@ -1,5 +1,7 @@
-package com.chatpress.v1.artifact;
+package com.chatpress.v1.common;
 
+import com.chatpress.v1.artifact.exception.ArtifactNotFoundException;
+import com.chatpress.v1.artifact.exception.DuplicateSlugException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

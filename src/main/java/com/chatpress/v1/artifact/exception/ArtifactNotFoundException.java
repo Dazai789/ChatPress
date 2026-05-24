@@ -1,4 +1,4 @@
-package com.chatpress.v1.artifact;
+package com.chatpress.v1.artifact.exception;
 
 public class ArtifactNotFoundException extends RuntimeException {
 

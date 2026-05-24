@@ -1,5 +1,6 @@
 package com.chatpress.v1.artifact;
 
+import com.chatpress.v1.artifact.exception.DuplicateSlugException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class ArtifactService {
         ensureSlugAvailableForCreate(slug);
 
         Artifact artifact = new Artifact(title, slug, sourceContent, markdownRenderer.render(sourceContent));
-        artifact.setStatus("published");
+        artifact.setStatus(ArtifactStatus.PUBLISHED);
         return artifactRepository.save(artifact);
     }
 

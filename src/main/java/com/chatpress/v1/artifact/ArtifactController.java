@@ -1,5 +1,8 @@
 package com.chatpress.v1.artifact;
 
+import com.chatpress.v1.artifact.dto.ArtifactRequest;
+import com.chatpress.v1.artifact.dto.ArtifactResponse;
+import com.chatpress.v1.artifact.exception.ArtifactNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

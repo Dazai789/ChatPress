@@ -29,6 +29,7 @@ class ArtifactControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Java Notes"))
                 .andExpect(jsonPath("$.slug").value("java-notes"))
+                .andExpect(jsonPath("$.status").value("published"))
                 .andExpect(jsonPath("$.renderedHtml").value("<h1>Java Notes</h1>\n"));
     }
 
@@ -72,6 +73,7 @@ class ArtifactControllerTest {
                 .andExpect(jsonPath("$.id").value(artifactId))
                 .andExpect(jsonPath("$.title").value("Backend Notes"))
                 .andExpect(jsonPath("$.slug").value("backend-notes"))
+                .andExpect(jsonPath("$.status").value("published"))
                 .andExpect(jsonPath("$.renderedHtml").value("<h1>Backend Notes</h1>\n"));
     }
 

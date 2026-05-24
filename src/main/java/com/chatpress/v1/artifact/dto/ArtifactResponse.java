@@ -1,6 +1,8 @@
-package com.chatpress.v1.artifact;
+package com.chatpress.v1.artifact.dto;
 
 import java.time.LocalDateTime;
+
+import com.chatpress.v1.artifact.Artifact;
 
 public record ArtifactResponse(
         Long id,
@@ -22,7 +24,7 @@ public record ArtifactResponse(
                 artifact.getSourceFormat(),
                 artifact.getSourceContent(),
                 artifact.getRenderedHtml(),
-                artifact.getStatus(),
+                artifact.getStatus().name().toLowerCase(),
                 artifact.getCreatedAt(),
                 artifact.getUpdatedAt()
         );
