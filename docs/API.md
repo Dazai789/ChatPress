@@ -119,9 +119,6 @@ GET /api/artifacts
     "id": 1,
     "title": "My Java Learning Notes",
     "slug": "my-java-learning-notes",
-    "sourceFormat": "markdown",
-    "sourceContent": "# My Java Learning Notes\n\nSpring Boot helps us build web applications quickly.",
-    "renderedHtml": "<h1>My Java Learning Notes</h1>\n<p>Spring Boot helps us build web applications quickly.</p>\n",
     "status": "published",
     "createdAt": "2026-05-20T19:30:00",
     "updatedAt": "2026-05-20T19:30:00"
@@ -131,7 +128,7 @@ GET /api/artifacts
 
 ### 说明
 
-当前实现使用统一的 `ArtifactResponse`，列表接口也会返回 `sourceContent` 和 `renderedHtml`。后续如果列表数据变大，可以再拆出专用列表响应，省略完整内容字段。
+列表接口返回轻量摘要，不包含 `sourceContent` 和 `renderedHtml`。完整内容通过详情接口获取。
 
 ## 5. 获取 Artifact 详情
 

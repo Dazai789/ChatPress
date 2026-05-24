@@ -2,6 +2,7 @@ package com.chatpress.v1.artifact;
 
 import com.chatpress.v1.artifact.dto.ArtifactRequest;
 import com.chatpress.v1.artifact.dto.ArtifactResponse;
+import com.chatpress.v1.artifact.dto.ArtifactSummaryResponse;
 import com.chatpress.v1.artifact.exception.ArtifactNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -40,9 +41,9 @@ public class ArtifactController {
     }
 
     @GetMapping
-    public List<ArtifactResponse> listArtifacts() {
+    public List<ArtifactSummaryResponse> listArtifacts() {
         return artifactService.listArtifacts().stream()
-                .map(ArtifactResponse::from)
+                .map(ArtifactSummaryResponse::from)
                 .toList();
     }
 

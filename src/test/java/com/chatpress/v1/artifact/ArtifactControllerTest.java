@@ -86,6 +86,19 @@ class ArtifactControllerTest {
     }
 
     @Test
+    void listArtifactsReturnsSummary() throws Exception {
+        createArtifact("List Notes", "list-notes", "# List Notes")
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/artifacts"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.slug == 'list-notes')].title").value("List Notes"))
+                .andExpect(jsonPath("$[?(@.slug == 'list-notes')].status").value("published"))
+                .andExpect(jsonPath("$[?(@.slug == 'list-notes')].sourceContent").doesNotExist())
+                .andExpect(jsonPath("$[?(@.slug == 'list-notes')].renderedHtml").doesNotExist());
+    }
+
+    @Test
     void updateArtifact() throws Exception {
         MvcResult result = createArtifact("Old Notes", "old-notes", "# Old Notes")
                 .andExpect(status().isCreated())
