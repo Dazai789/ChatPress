@@ -145,7 +145,9 @@ class ArtifactControllerTest {
         mockMvc.perform(get("/p/public-notes"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
-                .andExpect(content().string("<h1>Public Notes</h1>\n"));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<!doctype html>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Public Notes</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<h1>Public Notes</h1>")));
     }
 
     private ResultActions createArtifact(

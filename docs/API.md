@@ -298,7 +298,7 @@ GET /p/my-java-learning-notes
 
 ### 响应
 
-当前版本直接返回 artifact 的 `renderedHtml` 字段，并使用 `text/html` 响应类型。
+当前版本返回一个完整 HTML 页面，并把 artifact 的 `renderedHtml` 放进页面主体。
 
 ### 可能错误
 
