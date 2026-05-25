@@ -1,10 +1,10 @@
 # chatpress-v1
 
-chatpress-v1 是一个面向 AI 内容沉淀场景的轻量级知识页面发布系统。它的目标不是做一个传统博客，而是把 AI 聊天记录、学习笔记和 Markdown 内容整理成可保存、可维护、可公开访问的知识页面。
+chatpress-v1 是一个轻量级 Markdown 页面发布系统。它的第一版目标不是做传统博客，也不是马上处理复杂 AI 对话导入，而是先把 Markdown 内容稳定地保存、渲染并发布成可公开访问的 HTML 页面。
 
 ## 当前定位
 
-这个项目目前处于后端 MVP 阶段，已经完成一条基础内容发布链路：
+这个项目目前处于后端 MVP 阶段。V1 当前专注一条基础 Markdown 发布链路：
 
 ```text
 输入标题、slug、Markdown 内容
@@ -14,14 +14,13 @@ chatpress-v1 是一个面向 AI 内容沉淀场景的轻量级知识页面发布
 -> 通过 /p/{slug} 公开访问
 ```
 
-项目后续会继续向 ChatPress 的核心方向推进：
+后续版本再逐步扩展到 AI 对话导入：
 
 ```text
-AI 聊天记录
--> 保存原始记录
--> 解析 User / Assistant 消息
--> 转换成 Markdown 草稿
--> 复用现有 Artifact 发布链路
+AI 聊天记录或网页 HTML
+-> 提取可发布内容
+-> 转换成 Markdown 或结构化内容
+-> 复用现有 HTML 发布链路
 ```
 
 ## 已完成能力
@@ -38,7 +37,7 @@ AI 聊天记录
 - 公开页面标题 HTML 转义。
 - 草稿 / 发布状态控制。
 - 公开页面只展示 `published` 内容。
-- `sourceType` 来源类型：`markdown` / `ai_chat`。
+- `sourceType` 来源类型，目前 V1 主要使用 `markdown`。
 - 统一错误响应。
 - 基础接口测试。
 
@@ -66,7 +65,7 @@ GET    /p/{slug}
 | `title` | 页面标题 |
 | `slug` | 公开 URL 标识 |
 | `sourceFormat` | 内容格式，目前固定为 `markdown` |
-| `sourceType` | 内容来源：`markdown` 或 `ai_chat` |
+| `sourceType` | 内容来源，V1 主要使用 `markdown`，`ai_chat` 作为后续扩展 |
 | `sourceContent` | 用户输入的原始内容 |
 | `renderedHtml` | Markdown 渲染后的 HTML |
 | `status` | `draft` 或 `published` |
@@ -130,19 +129,19 @@ docs/
 
 ## 当前进度
 
-基础内容系统已经完成。按完整产品 MVP 估算，当前约完成 35%。后端基础能力已经比较完整，但 ChatPress 的差异化能力才刚开始。
+基础 Markdown 发布链路已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步应优先把 Markdown 页面发布体验做扎实。
 
 下一步建议做：
 
 ```text
-AI 聊天记录解析
+Markdown 发布体验打磨
 ```
 
-先支持一种简单格式：
+优先方向：
 
 ```text
-User: ...
-Assistant: ...
+优化公开页面 HTML 样式
+完善 Markdown 渲染效果
+增加最小可用创建页面
+再考虑 Markdown 预览
 ```
-
-然后把它转换成 Markdown 草稿，再复用现有 Markdown 渲染和公开发布链路。

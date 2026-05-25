@@ -4,7 +4,7 @@
 
 当前 MVP 使用一个核心数据对象：`Artifact`。
 
-一个 `Artifact` 表示一篇可以保存、编辑、发布和公开访问的知识页面。内容可以来自普通 Markdown，也可以来自 AI 聊天记录。
+一个 `Artifact` 表示一篇可以保存、编辑、发布和公开访问的知识页面。V1 内容主要来自 Markdown。
 
 当前数据模型的重点是先保存原始内容，并生成可展示的 HTML：
 
@@ -40,7 +40,7 @@ artifact
 | `title` | `String` | VARCHAR(200) | 是 | 页面标题。 |
 | `slug` | `String` | VARCHAR(200) | 是 | 公开 URL 标识，唯一。 |
 | `sourceFormat` | `String` | VARCHAR(50) | 是 | 内容格式，目前固定为 `markdown`。 |
-| `sourceType` | `Artifact.SourceType` | VARCHAR(50) | 是 | 内容来源：`MARKDOWN` 或 `AI_CHAT`。 |
+| `sourceType` | `Artifact.SourceType` | VARCHAR(50) | 是 | 内容来源。V1 主要使用 `MARKDOWN`，`AI_CHAT` 保留为后续扩展。 |
 | `sourceContent` | `String` | CLOB / TEXT | 是 | 用户输入的原始内容。 |
 | `renderedHtml` | `String` | CLOB / TEXT | 是 | 渲染后的 HTML。 |
 | `status` | `Artifact.Status` | VARCHAR(50) | 是 | 状态：`DRAFT` 或 `PUBLISHED`。 |
@@ -95,10 +95,10 @@ ai_chat
 
 | 值 | 说明 |
 |---|---|
-| `markdown` | 普通 Markdown 笔记。 |
-| `ai_chat` | AI 聊天记录或 AI 聊天整理内容。 |
+| `markdown` | 普通 Markdown 笔记，V1 的主要内容来源。 |
+| `ai_chat` | 后续 AI 聊天记录导入预留值，当前不做解析。 |
 
-当前阶段只保存 `sourceType`，还没有真正解析 AI 聊天记录。
+当前阶段只围绕 `markdown` 完善导入和 HTML 渲染。`ai_chat` 保留在模型中，但不是 V1 的开发重点。
 
 ## 5. 字段说明
 
@@ -135,14 +135,12 @@ sourceFormat = 内容是什么格式
 sourceType   = 内容从哪里来
 ```
 
-例如：
+V1 中通常是：
 
 ```text
 sourceFormat: markdown
-sourceType: ai_chat
+sourceType: markdown
 ```
-
-表示这篇内容来源于 AI 聊天记录，但当前保存和渲染时仍按 Markdown 文本处理。
 
 ### `sourceContent`
 
@@ -154,13 +152,6 @@ sourceType: ai_chat
 # Spring Boot Notes
 
 Controller receives HTTP requests.
-```
-
-AI 聊天记录示例：
-
-```text
-User: Controller 是什么？
-Assistant: Controller 是接收外部请求的入口。
 ```
 
 ### `renderedHtml`
@@ -184,7 +175,7 @@ Assistant: Controller 是接收外部请求的入口。
 - `slug` 不能为空。
 - `slug` 必须唯一。
 - `sourceContent` 不能为空。
-- `sourceType` 如果传入，只能是 `markdown` 或 `ai_chat`。
+- `sourceType` 如果传入，只能是 `markdown` 或当前预留的 `ai_chat`。
 - `sourceType` 不传时默认为 `markdown`。
 - `sourceFormat` 当前固定为 `markdown`。
 - 修改 `sourceContent` 时必须重新生成 `renderedHtml`。
@@ -197,9 +188,9 @@ id: 1
 title: Spring Boot Notes
 slug: spring-boot-notes
 sourceFormat: markdown
-sourceType: ai_chat
-sourceContent: User: Controller 是什么？
-renderedHtml: <p>User: Controller 是什么？</p>
+sourceType: markdown
+sourceContent: # Spring Boot Notes
+renderedHtml: <h1>Spring Boot Notes</h1>
 status: published
 createdAt: 2026-05-25T20:00:00
 updatedAt: 2026-05-25T20:00:00
@@ -220,9 +211,9 @@ updatedAt: 2026-05-25T20:00:00
 
 ## 9. 后续可能新增的数据结构
 
-下一阶段做 AI 聊天记录解析时，可能先不建新表，只在 Service 内解析文本。
+V1 暂时不新增表，继续围绕 `Artifact` 完成 Markdown 导入和 HTML 渲染。
 
-未来可能新增：
+后续版本如果支持 AI 聊天记录、标签、版本或附件，可能新增：
 
 - `ChatMessage`
 - `ArtifactVersion`

@@ -4,7 +4,7 @@
 
 本文档记录当前已经实现的 API。
 
-当前 API 支持：
+当前 API 支持 Markdown 内容发布：
 
 ```text
 创建 Artifact
@@ -37,7 +37,7 @@ POST /api/artifacts
 
 ### 请求体
 
-普通 Markdown：
+Markdown：
 
 ```json
 {
@@ -45,17 +45,6 @@ POST /api/artifacts
   "slug": "spring-boot-notes",
   "sourceType": "markdown",
   "sourceContent": "# Spring Boot Notes\n\nController receives HTTP requests."
-}
-```
-
-AI 聊天记录：
-
-```json
-{
-  "title": "AI Chat Notes",
-  "slug": "ai-chat-notes",
-  "sourceType": "ai_chat",
-  "sourceContent": "User: What is Spring Boot?\nAssistant: A Java backend framework."
 }
 ```
 
@@ -69,7 +58,7 @@ markdown
 
 - `title` 必填。
 - `slug` 必填，且必须唯一。
-- `sourceType` 可选，只能是 `markdown` 或 `ai_chat`。
+- `sourceType` 可选，V1 主要使用 `markdown`。`ai_chat` 字段值暂时保留为后续扩展。
 - `sourceContent` 必填。
 - `sourceFormat` 由后端固定为 `markdown`。
 - 创建后默认状态为 `published`。

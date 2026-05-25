@@ -176,8 +176,45 @@ class ArtifactControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<!doctype html>")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Public &lt;Notes&gt; &amp; Tips</title>")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("max-width: 760px;")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("max-width: 780px;")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<h1>Public Notes</h1>")));
+    }
+
+    @Test
+    void publicPageSupportsCommonMarkdownContent() throws Exception {
+        String markdown = """
+                # Markdown Guide
+
+                ## Backend Notes
+
+                - Controller
+                - Service
+
+                > Keep the public page readable.
+
+                Use `MockMvc` for tests.
+
+                ```
+                System.out.println("hello");
+                ```
+
+                Read [Spring](https://spring.io).
+                """;
+
+        createArtifact("Markdown Guide", "markdown-guide", markdown)
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/p/markdown-guide"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<h2>Backend Notes</h2>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<li>Controller</li>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<blockquote>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<code>MockMvc</code>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<pre><code>System.out.println(&quot;hello&quot;);")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<a href=\"https://spring.io\">Spring</a>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("blockquote {")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("pre code {")));
     }
 
     @Test

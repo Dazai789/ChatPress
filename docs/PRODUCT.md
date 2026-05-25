@@ -2,30 +2,30 @@
 
 ## 1. 产品概述
 
-chatpress-v1 是一个面向 AI 内容沉淀场景的轻量级知识页面发布系统。
+chatpress-v1 是一个轻量级 Markdown 页面发布系统。
 
-它的核心目标是把 AI 聊天记录、Markdown 笔记和学习整理内容转化为结构化的 `Artifact`，并发布为可访问、可分享的网页。
+它的第一版核心目标是把 Markdown 笔记和学习整理内容转化为结构化的 `Artifact`，并发布为可访问、可分享的 HTML 页面。
 
-当前第一阶段已经完成基础 Artifact 发布系统。下一阶段开始进入更贴近项目核心的能力：AI 聊天记录导入与整理。
+当前第一阶段已经完成基础 Artifact 发布系统。下一阶段继续专注 Markdown 导入、HTML 渲染和公开页面体验，不急着进入复杂 AI 聊天记录导入。
 
 ## 2. 产品定位
 
-chatpress-v1 位于 AI 聊天工具、笔记工具、博客系统之间。
+chatpress-v1 第一版位于 Markdown 笔记工具和轻量页面发布工具之间。
 
-AI 聊天工具适合生成内容，但内容分散在聊天窗口里。传统笔记工具适合记录，但公开分享和结构化发布能力有限。博客系统可以发布内容，但对零散 AI 对话和学习笔记来说流程偏重。
+传统笔记工具适合记录，但公开分享和结构化发布能力有限。博客系统可以发布内容，但对学习笔记和项目过程记录来说流程偏重。
 
 chatpress-v1 的定位是：
 
 ```text
-把 AI 对话和 Markdown 笔记变成可维护、可分享的知识页面。
+把 Markdown 笔记变成可维护、可分享的知识页面。
 ```
 
 ## 3. 目标用户
 
 第一版主要面向：
 
-- 高频使用 ChatGPT、Claude、Gemini、Cursor、Codex 等 AI 工具的学习者。
-- 想把 AI 对话沉淀成学习笔记或项目文档的个人用户。
+- 使用 Markdown 整理学习笔记和项目记录的个人用户。
+- 想把本地笔记快速发布成 HTML 页面的人。
 - 需要整理技术笔记、调研记录和项目过程的开发者。
 - 面向求职展示，希望把学习和项目过程整理成可访问页面的用户。
 
@@ -44,15 +44,7 @@ chatpress-v1 的定位是：
 -> published 内容可通过 /p/{slug} 公开访问
 ```
 
-下一阶段核心场景：
-
-```text
-用户粘贴 AI 聊天记录
--> 系统识别为 sourceType = ai_chat
--> 解析 User / Assistant 消息
--> 生成 Markdown 草稿
--> 复用现有 Artifact 发布链路
-```
+下一阶段仍然围绕这条链路打磨：让 Markdown 输入、HTML 渲染和公开页面展示更稳定、更像一个可用产品。
 
 ## 5. MVP 已完成范围
 
@@ -71,7 +63,7 @@ chatpress-v1 的定位是：
 - slug 重复校验。
 - 草稿 / 发布状态控制。
 - 公开页面只展示 `published` 内容。
-- 内容来源字段 `sourceType`：`markdown` / `ai_chat`。
+- 内容来源字段 `sourceType`，V1 主要使用 `markdown`。
 - 基础测试覆盖。
 
 ## 6. 当前非目标
@@ -80,6 +72,8 @@ chatpress-v1 的定位是：
 
 - 真实 AI 模型调用。
 - 自动读取 ChatGPT / Claude / Gemini 网页聊天记录。
+- AI 聊天记录解析。
+- 复制网页 HTML 后自动清洗成 Markdown。
 - 浏览器扩展。
 - 用户账号和权限系统。
 - 多用户协作。
@@ -101,8 +95,8 @@ chatpress-v1 的定位是：
 创建 artifact
 -> 输入 title
 -> 输入 slug
--> 选择或默认 sourceType
--> 粘贴 Markdown 或 AI 聊天记录文本
+-> 默认使用 sourceType = markdown
+-> 粘贴 Markdown 内容
 -> 保存
 -> 修改状态为 published
 -> 打开公开页面 URL
@@ -135,8 +129,8 @@ chatpress-v1 的定位是：
 - 先打通完整链路，再做复杂功能。
 - 保留原始内容，不丢失用户输入。
 - 后端逻辑优先清晰可理解。
-- `sourceType` 用于区分内容来源，不急着做复杂解析。
-- AI 聊天记录导入先做规则版，不直接接 LLM。
+- V1 先专注 Markdown 导入和 HTML 渲染。
+- `sourceType` 保留扩展空间，但当前不围绕 AI chat 展开。
 - 每一步都配测试，避免后面改乱。
 
 ## 10. 下一阶段
@@ -144,24 +138,23 @@ chatpress-v1 的定位是：
 下一阶段建议实现：
 
 ```text
-AI 聊天记录解析
+Markdown 发布体验打磨
 ```
 
-第一版只支持一种简单格式：
+优先级：
 
 ```text
-User: 我的问题
-Assistant: AI 的回答
-
-User: 下一个问题
-Assistant: 下一个回答
+1. 优化公开页面 HTML 样式。
+2. 完善 Markdown 渲染效果，重点关注标题、列表、代码块、链接。
+3. 增加最小可用创建页面。
+4. 再考虑 Markdown 预览。
 ```
 
-目标不是一次做完整 AI 导入，而是先完成：
+AI 聊天记录导入、网页 HTML 导入、浏览器扩展放到后续版本：
 
 ```text
-ai_chat 原始文本
--> messages
--> Markdown 草稿
--> renderedHtml
+V2/V3: AI chat 或 HTML 导入
+-> 清洗内容
+-> 转成 Markdown
+-> 复用 Artifact 发布链路
 ```
