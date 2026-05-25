@@ -2,35 +2,32 @@
 
 ## 1. 概述
 
-本文档定义 chatpress-v1 的 MVP API。
+本文档记录当前已经实现的 API。
 
-API 需要支持一个简单流程：
+当前 API 支持：
 
 ```text
-创建 Markdown 笔记，或粘贴 AI 对话整理后的 Markdown
--> 保存为 artifact
--> 渲染成 HTML
--> 列出、查看、更新、删除
--> 通过公开 URL 打开
+创建 Artifact
+-> 保存原始内容
+-> 渲染 HTML
+-> 查询、更新、删除
+-> 修改草稿 / 发布状态
+-> 通过 /p/{slug} 访问公开页面
 ```
-
-MVP API 只需要支持 Markdown artifact。AI 聊天记录导入暂时不做自动化，第一版只要求用户把聊天内容整理或复制成 Markdown 后提交。
 
 ## 2. 基础路径
 
-使用两组路由：
+后台 JSON API：
 
 ```text
 /api/artifacts
 ```
 
-用于 JSON API 操作。
+公开页面：
 
 ```text
 /p/{slug}
 ```
-
-用于公开页面访问。
 
 ## 3. 创建 Artifact
 
@@ -38,50 +35,69 @@ MVP API 只需要支持 Markdown artifact。AI 聊天记录导入暂时不做自
 POST /api/artifacts
 ```
 
-从 Markdown 内容创建一个新的 artifact。这个 Markdown 可以来自普通笔记，也可以来自 AI 聊天记录整理。
-
 ### 请求体
+
+普通 Markdown：
 
 ```json
 {
-  "title": "My Java Learning Notes",
-  "slug": "my-java-learning-notes",
-  "sourceContent": "# My Java Learning Notes\n\nSpring Boot helps us build web applications quickly."
+  "title": "Spring Boot Notes",
+  "slug": "spring-boot-notes",
+  "sourceType": "markdown",
+  "sourceContent": "# Spring Boot Notes\n\nController receives HTTP requests."
 }
 ```
 
-### 说明
+AI 聊天记录：
+
+```json
+{
+  "title": "AI Chat Notes",
+  "slug": "ai-chat-notes",
+  "sourceType": "ai_chat",
+  "sourceContent": "User: What is Spring Boot?\nAssistant: A Java backend framework."
+}
+```
+
+`sourceType` 可以不传。不传时默认为：
+
+```text
+markdown
+```
+
+### 字段说明
 
 - `title` 必填。
-- `slug` 必填，且应该唯一。
+- `slug` 必填，且必须唯一。
+- `sourceType` 可选，只能是 `markdown` 或 `ai_chat`。
 - `sourceContent` 必填。
-- 后端应该把 `sourceFormat` 设置为 `markdown`。
-- 后端会把 `sourceContent` 渲染成 `renderedHtml`。
-- 后端应该把初始状态设置为 `published`。
+- `sourceFormat` 由后端固定为 `markdown`。
+- 创建后默认状态为 `published`。
 
 ### 响应体
 
 ```json
 {
   "id": 1,
-  "title": "My Java Learning Notes",
-  "slug": "my-java-learning-notes",
+  "title": "Spring Boot Notes",
+  "slug": "spring-boot-notes",
   "sourceFormat": "markdown",
-  "sourceContent": "# My Java Learning Notes\n\nSpring Boot helps us build web applications quickly.",
-  "renderedHtml": "<h1>My Java Learning Notes</h1>\n<p>Spring Boot helps us build web applications quickly.</p>\n",
+  "sourceType": "markdown",
+  "sourceContent": "# Spring Boot Notes\n\nController receives HTTP requests.",
+  "renderedHtml": "<h1>Spring Boot Notes</h1>\n<p>Controller receives HTTP requests.</p>\n",
   "status": "published",
-  "createdAt": "2026-05-20T19:30:00",
-  "updatedAt": "2026-05-20T19:30:00"
+  "createdAt": "2026-05-25T20:00:00",
+  "updatedAt": "2026-05-25T20:00:00"
 }
 ```
 
 ### 可能错误
 
+参数校验失败：
+
 ```text
 400 Bad Request
 ```
-
-当 `title`、`slug` 或 `sourceContent` 为空时返回。
 
 ```json
 {
@@ -90,16 +106,16 @@ POST /api/artifacts
 }
 ```
 
+slug 重复：
+
 ```text
 409 Conflict
 ```
 
-当 `slug` 已存在时返回。
-
 ```json
 {
   "code": "DUPLICATE_SLUG",
-  "message": "Artifact slug already exists: my-java-learning-notes"
+  "message": "Artifact slug already exists: spring-boot-notes"
 }
 ```
 
@@ -109,26 +125,28 @@ POST /api/artifacts
 GET /api/artifacts
 ```
 
-返回所有 artifacts。
-
 ### 响应体
 
 ```json
 [
   {
     "id": 1,
-    "title": "My Java Learning Notes",
-    "slug": "my-java-learning-notes",
+    "title": "Spring Boot Notes",
+    "slug": "spring-boot-notes",
+    "sourceType": "markdown",
     "status": "published",
-    "createdAt": "2026-05-20T19:30:00",
-    "updatedAt": "2026-05-20T19:30:00"
+    "createdAt": "2026-05-25T20:00:00",
+    "updatedAt": "2026-05-25T20:00:00"
   }
 ]
 ```
 
 ### 说明
 
-列表接口返回轻量摘要，不包含 `sourceContent` 和 `renderedHtml`。完整内容通过详情接口获取。
+- 按 `createdAt` 倒序返回。
+- 返回摘要信息。
+- 不返回 `sourceContent`。
+- 不返回 `renderedHtml`。
 
 ## 5. 获取 Artifact 详情
 
@@ -136,21 +154,20 @@ GET /api/artifacts
 GET /api/artifacts/{id}
 ```
 
-根据内部 ID 返回一个 artifact。
-
 ### 响应体
 
 ```json
 {
   "id": 1,
-  "title": "My Java Learning Notes",
-  "slug": "my-java-learning-notes",
+  "title": "Spring Boot Notes",
+  "slug": "spring-boot-notes",
   "sourceFormat": "markdown",
-  "sourceContent": "# My Java Learning Notes\n\nSpring Boot helps us build web applications quickly.",
-  "renderedHtml": "<h1>My Java Learning Notes</h1>\n<p>Spring Boot helps us build web applications quickly.</p>\n",
+  "sourceType": "markdown",
+  "sourceContent": "# Spring Boot Notes\n\nController receives HTTP requests.",
+  "renderedHtml": "<h1>Spring Boot Notes</h1>\n<p>Controller receives HTTP requests.</p>\n",
   "status": "published",
-  "createdAt": "2026-05-20T19:30:00",
-  "updatedAt": "2026-05-20T19:30:00"
+  "createdAt": "2026-05-25T20:00:00",
+  "updatedAt": "2026-05-25T20:00:00"
 }
 ```
 
@@ -159,8 +176,6 @@ GET /api/artifacts/{id}
 ```text
 404 Not Found
 ```
-
-当 artifact 不存在时返回。
 
 ```json
 {
@@ -175,91 +190,101 @@ GET /api/artifacts/{id}
 PUT /api/artifacts/{id}
 ```
 
-更新一个已有 artifact。
-
 ### 请求体
 
 ```json
 {
-  "title": "Updated Java Learning Notes",
-  "slug": "updated-java-learning-notes",
-  "sourceContent": "# Updated Java Learning Notes\n\nSpring Boot is useful for backend projects."
+  "title": "Updated Spring Boot Notes",
+  "slug": "updated-spring-boot-notes",
+  "sourceType": "markdown",
+  "sourceContent": "# Updated Spring Boot Notes\n\nService handles business logic."
 }
 ```
 
 ### 说明
 
-- `title` 必填。
-- `slug` 必填，且应该唯一。
-- `sourceContent` 必填。
-- 当前版本由客户端传入新的 `slug`。
-- 如果 `sourceContent` 变化，后端会重新生成 `renderedHtml`。
-- 后端应该更新 `updatedAt`。
+- 更新标题、slug、sourceType、sourceContent。
+- 如果 `sourceContent` 变化，后端重新生成 `renderedHtml`。
+- 如果不传 `sourceType`，默认按 `markdown` 处理。
+- 更新内容不会自动改变 `status`。
 
 ### 响应体
 
 ```json
 {
   "id": 1,
-  "title": "Updated Java Learning Notes",
-  "slug": "updated-java-learning-notes",
+  "title": "Updated Spring Boot Notes",
+  "slug": "updated-spring-boot-notes",
   "sourceFormat": "markdown",
-  "sourceContent": "# Updated Java Learning Notes\n\nSpring Boot is useful for backend projects.",
-  "renderedHtml": "<h1>Updated Java Learning Notes</h1>\n<p>Spring Boot is useful for backend projects.</p>\n",
+  "sourceType": "markdown",
+  "sourceContent": "# Updated Spring Boot Notes\n\nService handles business logic.",
+  "renderedHtml": "<h1>Updated Spring Boot Notes</h1>\n<p>Service handles business logic.</p>\n",
   "status": "published",
-  "createdAt": "2026-05-20T19:30:00",
-  "updatedAt": "2026-05-20T19:45:00"
+  "createdAt": "2026-05-25T20:00:00",
+  "updatedAt": "2026-05-25T20:10:00"
 }
 ```
 
 ### 可能错误
 
+- `400 Bad Request`：参数校验失败。
+- `404 Not Found`：artifact 不存在。
+- `409 Conflict`：新的 slug 已被其他 artifact 使用。
+
+## 7. 修改发布状态
+
 ```text
-400 Bad Request
+PUT /api/artifacts/{id}/status
 ```
 
-当 `title`、`slug` 或 `sourceContent` 为空时返回。
+### 请求体
+
+改成草稿：
 
 ```json
 {
-  "code": "VALIDATION_FAILED",
-  "message": "Request validation failed"
+  "status": "draft"
 }
 ```
 
-```text
-404 Not Found
-```
-
-当 artifact 不存在时返回。
+改成发布：
 
 ```json
 {
-  "code": "ARTIFACT_NOT_FOUND",
-  "message": "Artifact not found: 1"
+  "status": "published"
 }
 ```
 
-```text
-409 Conflict
-```
+### 响应体
 
-当新的 `slug` 已被其他 artifact 使用时返回。
+返回完整 Artifact：
 
 ```json
 {
-  "code": "DUPLICATE_SLUG",
-  "message": "Artifact slug already exists: updated-java-learning-notes"
+  "id": 1,
+  "title": "Spring Boot Notes",
+  "slug": "spring-boot-notes",
+  "sourceFormat": "markdown",
+  "sourceType": "markdown",
+  "sourceContent": "# Spring Boot Notes",
+  "renderedHtml": "<h1>Spring Boot Notes</h1>\n",
+  "status": "draft",
+  "createdAt": "2026-05-25T20:00:00",
+  "updatedAt": "2026-05-25T20:15:00"
 }
 ```
 
-## 7. 删除 Artifact
+### 说明
+
+- 只能传 `draft` 或 `published`。
+- 草稿仍可通过后台详情接口查看。
+- 草稿不能通过公开页面访问。
+
+## 8. 删除 Artifact
 
 ```text
 DELETE /api/artifacts/{id}
 ```
-
-根据内部 ID 删除一个 artifact。
 
 ### 响应
 
@@ -273,8 +298,6 @@ DELETE /api/artifacts/{id}
 404 Not Found
 ```
 
-当 artifact 不存在时返回。
-
 ```json
 {
   "code": "ARTIFACT_NOT_FOUND",
@@ -282,48 +305,65 @@ DELETE /api/artifacts/{id}
 }
 ```
 
-## 8. 公开页面
+## 9. 公开页面
 
 ```text
 GET /p/{slug}
 ```
 
-返回 artifact 的公开 HTML 页面。
+### 说明
+
+- 返回完整 HTML 页面。
+- 只展示 `published` 状态的 Artifact。
+- `draft` 状态返回 404。
+- 不存在的 slug 返回 404。
+- 当前页面样式写在 `PublicPageRenderer` 的 HTML 字符串中。
 
 ### 示例
 
 ```text
-GET /p/my-java-learning-notes
+GET /p/spring-boot-notes
 ```
 
-### 响应
-
-当前版本返回一个完整 HTML 页面，并把 artifact 的 `renderedHtml` 放进页面主体。
-
-### 可能错误
+响应类型：
 
 ```text
-404 Not Found
+text/html
 ```
 
-当 artifact 不存在时返回。
+## 10. 当前错误响应格式
 
-当前公开页面接口返回 HTML，不返回 JSON 错误体。
+JSON API 错误统一返回：
 
-## 9. 不属于 MVP 的 API 功能
+```json
+{
+  "code": "ERROR_CODE",
+  "message": "Human readable message"
+}
+```
 
-不要在 MVP 实现这些 API 功能：
+当前错误码：
 
-- 认证。
-- 用户级 artifact。
-- 私有 artifact。
-- 分页。
+| code | HTTP 状态 | 场景 |
+|---|---:|---|
+| `VALIDATION_FAILED` | 400 | 请求参数不合法。 |
+| `ARTIFACT_NOT_FOUND` | 404 | artifact 不存在。 |
+| `DUPLICATE_SLUG` | 409 | slug 已存在。 |
+
+公开页面接口是 HTML 页面入口，404 时不返回 JSON 错误体。
+
+## 11. 暂不实现的 API
+
+当前不做：
+
+- 登录 / 注册。
+- 用户权限。
+- 标签。
 - 搜索。
-- 标签 API。
+- 分页。
 - 文件上传。
-- 自动导入 AI 聊天记录。
-- DOCX 上传。
-- HTML 上传。
-- AI 生成。
-- LLM 可读 JSON 或文本端点。
-- MCP 端点。
+- 自动读取 AI 平台聊天记录。
+- LLM 总结。
+- DOCX / PDF 导入。
+- MCP endpoint。
+- 静态站点导出。

@@ -2,67 +2,105 @@
 
 ## 1. 概述
 
-MVP 只使用一个核心数据对象：`Artifact`。
+当前 MVP 使用一个核心数据对象：`Artifact`。
 
-一个 artifact 表示一篇由用户提供内容生成的已发布知识页面。用户提供的内容可以是一篇普通 Markdown 笔记，也可以是一段 AI 对话整理后的 Markdown。
+一个 `Artifact` 表示一篇可以保存、编辑、发布和公开访问的知识页面。内容可以来自普通 Markdown，也可以来自 AI 聊天记录。
 
-第一版应该支持这个简单流程：
+当前数据模型的重点是先保存原始内容，并生成可展示的 HTML：
 
 ```text
-用户写 Markdown，或粘贴 AI 对话整理后的 Markdown
--> 系统保存原始内容
--> 系统渲染 HTML
--> 系统保存渲染后的 HTML
--> 用户通过 slug 打开公开页面
+sourceContent
+-> MarkdownRenderer
+-> renderedHtml
+-> PublicPageRenderer
+-> /p/{slug}
 ```
 
 ## 2. 主表：`artifact`
 
-第一张数据库表是：
+当前只有一张核心表：
 
 ```text
 artifact
 ```
 
-它同时保存原始笔记内容和渲染后的页面内容。
+它同时保存：
+
+- 用户输入的原始内容。
+- Markdown 渲染后的 HTML。
+- 公开访问所需的 slug。
+- 草稿 / 发布状态。
+- 内容来源类型。
 
 ## 3. 字段
 
-| 字段 | 类型 | 必填 | 说明 |
-|---|---|---:|---|
-| `id` | Long / BIGINT | 是 | 主键，唯一内部标识。 |
-| `title` | String / VARCHAR | 是 | 用户可读的笔记标题。 |
-| `slug` | String / VARCHAR | 是 | URL 友好的公开标识。 |
-| `source_format` | String / VARCHAR | 是 | 原始内容格式。MVP 值为 `markdown`。 |
-| `source_content` | Text / CLOB | 是 | 用户提供的原始内容，可以是 Markdown 笔记或 AI 对话整理内容。 |
-| `rendered_html` | Text / CLOB | 是 | 从 `source_content` 生成的 HTML。 |
-| `status` | Enum / VARCHAR | 是 | 发布状态。代码中使用 `Artifact.Status`，数据库保存枚举名。 |
-| `created_at` | Timestamp | 是 | artifact 创建时间。 |
-| `updated_at` | Timestamp | 是 | artifact 最后更新时间。 |
+| 字段 | Java 类型 | 数据库含义 | 必填 | 说明 |
+|---|---|---|---:|---|
+| `id` | `Long` | BIGINT | 是 | 主键，内部标识。 |
+| `title` | `String` | VARCHAR(200) | 是 | 页面标题。 |
+| `slug` | `String` | VARCHAR(200) | 是 | 公开 URL 标识，唯一。 |
+| `sourceFormat` | `String` | VARCHAR(50) | 是 | 内容格式，目前固定为 `markdown`。 |
+| `sourceType` | `Artifact.SourceType` | VARCHAR(50) | 是 | 内容来源：`MARKDOWN` 或 `AI_CHAT`。 |
+| `sourceContent` | `String` | CLOB / TEXT | 是 | 用户输入的原始内容。 |
+| `renderedHtml` | `String` | CLOB / TEXT | 是 | 渲染后的 HTML。 |
+| `status` | `Artifact.Status` | VARCHAR(50) | 是 | 状态：`DRAFT` 或 `PUBLISHED`。 |
+| `createdAt` | `LocalDateTime` | Timestamp | 是 | 创建时间。 |
+| `updatedAt` | `LocalDateTime` | Timestamp | 是 | 更新时间。 |
 
-## 4. 字段说明
+## 4. 枚举
 
-### `id`
+### `Artifact.Status`
 
-`id` 用于后端内部识别。
+代码中：
 
-示例：
-
-```text
-1
-2
-3
+```java
+public enum Status {
+    DRAFT,
+    PUBLISHED
+}
 ```
 
-### `title`
-
-标题会展示在笔记列表和公开页面上。
-
-示例：
+API 返回：
 
 ```text
-My Java Learning Notes
+draft
+published
 ```
+
+规则：
+
+- 后台详情和列表可以看到所有状态。
+- 公开页面 `/p/{slug}` 只允许访问 `PUBLISHED`。
+- `DRAFT` 内容即使 slug 正确，也返回 404。
+
+### `Artifact.SourceType`
+
+代码中：
+
+```java
+public enum SourceType {
+    MARKDOWN,
+    AI_CHAT
+}
+```
+
+API 返回：
+
+```text
+markdown
+ai_chat
+```
+
+含义：
+
+| 值 | 说明 |
+|---|---|
+| `markdown` | 普通 Markdown 笔记。 |
+| `ai_chat` | AI 聊天记录或 AI 聊天整理内容。 |
+
+当前阶段只保存 `sourceType`，还没有真正解析 AI 聊天记录。
+
+## 5. 字段说明
 
 ### `slug`
 
@@ -71,129 +109,126 @@ My Java Learning Notes
 示例：
 
 ```text
-my-java-learning-notes
+/p/spring-boot-notes
 ```
 
-公开页面示例：
+规则：
 
-```text
-/p/my-java-learning-notes
-```
+- 必填。
+- 唯一。
+- 创建和更新时都要检查重复。
 
-`slug` 应该唯一。
+### `sourceFormat`
 
-### `source_format`
+`sourceFormat` 表示内容格式。
 
-`source_format` 记录用户提供内容的格式。
-
-MVP 只需要支持这个值：
+当前固定为：
 
 ```text
 markdown
 ```
 
-未来可能支持：
+它和 `sourceType` 不一样：
 
 ```text
-html
-txt
-docx
-pdf
+sourceFormat = 内容是什么格式
+sourceType   = 内容从哪里来
 ```
 
-不要在 MVP 实现未来格式。
-
-### `source_content`
-
-这个字段保存用户的原始内容。
-
 例如：
+
+```text
+sourceFormat: markdown
+sourceType: ai_chat
+```
+
+表示这篇内容来源于 AI 聊天记录，但当前保存和渲染时仍按 Markdown 文本处理。
+
+### `sourceContent`
+
+保存用户输入的原始内容。
+
+普通 Markdown 示例：
 
 ```markdown
-# My Java Learning Notes
+# Spring Boot Notes
 
-Spring Boot helps us build web applications quickly.
+Controller receives HTTP requests.
 ```
 
-系统需要保留原始内容，这样用户之后才能编辑笔记或继续整理 AI 对话内容。
+AI 聊天记录示例：
 
-### `rendered_html`
+```text
+User: Controller 是什么？
+Assistant: Controller 是接收外部请求的入口。
+```
 
-这个字段保存生成后的 HTML。
+### `renderedHtml`
 
-例如：
+由 `MarkdownRenderer` 从 `sourceContent` 生成。
+
+示例：
 
 ```html
-<h1>My Java Learning Notes</h1>
-<p>Spring Boot helps us build web applications quickly.</p>
+<h1>Spring Boot Notes</h1>
+<p>Controller receives HTTP requests.</p>
 ```
 
-MVP 阶段可以在每次创建或更新笔记时重新生成这个字段。
+当前创建和更新 Artifact 时会重新生成。
 
-### `status`
+## 6. 约束
 
-第一版只需要两个状态：
-
-```text
-DRAFT
-PUBLISHED
-```
-
-API 响应中会返回小写值：
-
-```text
-draft
-published
-```
-
-如果第一版想再简化，可以先把所有笔记都设为 `PUBLISHED`。
-
-### `created_at`
-
-创建时间。
-
-这个值应该在 artifact 首次创建时设置。
-
-### `updated_at`
-
-最后更新时间。
-
-这个值应该在用户编辑 artifact 时变化。
-
-## 5. 约束
-
-MVP 应该强制这些规则：
+当前强制规则：
 
 - `title` 不能为空。
 - `slug` 不能为空。
 - `slug` 必须唯一。
-- `source_format` 在第一版必须是 `markdown`。
-- `source_content` 不能为空。
-- 当 `source_content` 变化时，应该重新生成 `rendered_html`。
+- `sourceContent` 不能为空。
+- `sourceType` 如果传入，只能是 `markdown` 或 `ai_chat`。
+- `sourceType` 不传时默认为 `markdown`。
+- `sourceFormat` 当前固定为 `markdown`。
+- 修改 `sourceContent` 时必须重新生成 `renderedHtml`。
+- 公开页面只展示 `published` 内容。
 
-## 6. 示例记录
+## 7. 示例记录
 
 ```text
 id: 1
-title: My Java Learning Notes
-slug: my-java-learning-notes
-source_format: markdown
-source_content: # My Java Learning Notes
-rendered_html: <h1>My Java Learning Notes</h1>
+title: Spring Boot Notes
+slug: spring-boot-notes
+sourceFormat: markdown
+sourceType: ai_chat
+sourceContent: User: Controller 是什么？
+renderedHtml: <p>User: Controller 是什么？</p>
 status: published
-created_at: 2026-05-20T19:30:00
-updated_at: 2026-05-20T19:30:00
+createdAt: 2026-05-25T20:00:00
+updatedAt: 2026-05-25T20:00:00
 ```
 
-## 7. 未来表
+## 8. 当前数据库状态
 
-MVP 不实现这些表，但未来可能有用：
+当前使用 H2 内存数据库。
 
-- `tag`
-- `artifact_tag`
-- `artifact_version`
-- `user`
-- `asset`
-- `preset`
+含义：
 
-第一版应该继续聚焦单表 `artifact`。
+```text
+项目启动时创建数据库
+项目停止后数据消失
+```
+
+这适合当前学习和开发阶段。等功能稳定后，再迁移到 MySQL。
+
+## 9. 后续可能新增的数据结构
+
+下一阶段做 AI 聊天记录解析时，可能先不建新表，只在 Service 内解析文本。
+
+未来可能新增：
+
+- `ChatMessage`
+- `ArtifactVersion`
+- `Tag`
+- `ArtifactTag`
+- `Asset`
+- `User`
+
+当前阶段继续保持单表，避免过早复杂化。

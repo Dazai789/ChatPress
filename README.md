@@ -1,44 +1,62 @@
 # chatpress-v1
 
-chatpress-v1 是一个面向 AI 内容沉淀场景的轻量级知识页面发布系统。项目支持将 AI 对话整理稿或 Markdown 笔记保存为结构化内容，并发布为可访问、可分享的网页。
+chatpress-v1 是一个面向 AI 内容沉淀场景的轻量级知识页面发布系统。它的目标不是做一个传统博客，而是把 AI 聊天记录、学习笔记和 Markdown 内容整理成可保存、可维护、可公开访问的知识页面。
 
-## 背景
+## 当前定位
 
-在日常学习、技术调研和项目开发中，大量有价值的信息已经产生于 ChatGPT、Claude、Gemini、Cursor 等 AI 工具的对话过程。相比传统笔记，这类内容通常具有以下特点：
-
-- 生成速度快，但分散在不同聊天窗口或本地文件中。
-- 内容有复用价值，但缺少稳定的访问入口。
-- 适合整理成知识页面，而不一定适合写成传统博客文章。
-- 常以 Markdown 形式保存，具备较低的发布转换成本。
-
-chatpress-v1 的目标是提供一个简洁的发布流程，把这些内容从临时记录转化为可维护的知识页面。
-
-## 核心流程
+这个项目目前处于后端 MVP 阶段，已经完成一条基础内容发布链路：
 
 ```text
-输入 AI 对话整理稿或 Markdown 笔记
--> 保存原始内容
+输入标题、slug、Markdown 内容
+-> 保存为 Artifact
 -> 渲染为 HTML
--> 生成公开访问页面
+-> 控制草稿或发布状态
+-> 通过 /p/{slug} 公开访问
 ```
 
-## MVP 范围
+项目后续会继续向 ChatPress 的核心方向推进：
 
-当前版本聚焦单一发布链路，计划实现：
+```text
+AI 聊天记录
+-> 保存原始记录
+-> 解析 User / Assistant 消息
+-> 转换成 Markdown 草稿
+-> 复用现有 Artifact 发布链路
+```
 
-- Artifact 创建、编辑、删除、查询
-- Markdown 内容保存
-- Markdown 到 HTML 的渲染
-- 基于 slug 的公开页面访问
-- 后台 JSON API
+## 已完成能力
 
-第一版不包含自动 AI 对话导入、账号权限、语义搜索、知识图谱、文件上传、插件系统等扩展能力。这些功能会在基础发布流程稳定后再评估。
+- Spring Boot 项目骨架。
+- Maven 依赖和测试流程。
+- H2 内存数据库。
+- Spring Data JPA 数据访问。
+- Artifact 创建、列表、详情、更新、删除。
+- slug 唯一性校验。
+- Markdown 转 HTML。
+- 公开页面访问：`GET /p/{slug}`。
+- 公开页面基础样式。
+- 公开页面标题 HTML 转义。
+- 草稿 / 发布状态控制。
+- 公开页面只展示 `published` 内容。
+- `sourceType` 来源类型：`markdown` / `ai_chat`。
+- 统一错误响应。
+- 基础接口测试。
 
-## 数据模型
+## 当前接口
 
-MVP 使用一个核心实体：`Artifact`。
+```text
+POST   /api/artifacts
+GET    /api/artifacts
+GET    /api/artifacts/{id}
+PUT    /api/artifacts/{id}
+PUT    /api/artifacts/{id}/status
+DELETE /api/artifacts/{id}
+GET    /p/{slug}
+```
 
-`Artifact` 表示一篇可发布的知识页面，包含标题、slug、原始内容、渲染结果、发布状态和时间信息。
+## 核心数据对象
+
+当前只有一个核心实体：`Artifact`。
 
 主要字段：
 
@@ -47,60 +65,84 @@ MVP 使用一个核心实体：`Artifact`。
 | `id` | 内部主键 |
 | `title` | 页面标题 |
 | `slug` | 公开 URL 标识 |
-| `sourceFormat` | 原始内容格式，MVP 固定为 `markdown` |
+| `sourceFormat` | 内容格式，目前固定为 `markdown` |
+| `sourceType` | 内容来源：`markdown` 或 `ai_chat` |
 | `sourceContent` | 用户输入的原始内容 |
-| `renderedHtml` | 渲染后的 HTML |
-| `status` | 发布状态 |
+| `renderedHtml` | Markdown 渲染后的 HTML |
+| `status` | `draft` 或 `published` |
 | `createdAt` | 创建时间 |
 | `updatedAt` | 更新时间 |
 
-## API 设计
-
-MVP API 草案：
-
-```text
-POST   /api/artifacts
-GET    /api/artifacts
-GET    /api/artifacts/{id}
-PUT    /api/artifacts/{id}
-DELETE /api/artifacts/{id}
-GET    /p/{slug}
-```
-
-详细设计文档：
-
-- [产品定义](docs/PRODUCT.md)
-- [数据模型](docs/DATA_MODEL.md)
-- [API 设计](docs/API.md)
-
-## 项目结构
-
-```text
-.
-├── README.md
-├── pom.xml
-├── src/
-│   ├── main/
-│   └── test/
-└── docs/
-    ├── PRODUCT.md
-    ├── DATA_MODEL.md
-    └── API.md
-```
-
-## 技术栈规划
-
-后端计划采用：
+## 技术栈
 
 - Java 21
 - Spring Boot 3.5.14
 - Maven
 - H2
 - Spring Data JPA
-- CommonMark Markdown 渲染库
+- Bean Validation
+- CommonMark
+- JUnit / MockMvc
 
-技术选型会围绕后端 CRUD、数据持久化和内容渲染这三个核心目标逐步推进。
+当前数据库是 H2 内存数据库。运行或测试时会临时创建，项目停止后数据会消失。等功能稳定后再切换 MySQL。
 
-## 项目状态
+## 项目结构
 
-当前项目处于早期实现阶段，已完成产品边界、数据模型、API 草案、Spring Boot 项目骨架、Artifact 基础 CRUD、slug 唯一性校验、Markdown 渲染和基于 slug 的公开页面访问。下一阶段将整理 API 响应结构和错误响应格式。
+```text
+src/main/java/com/chatpress/v1/
+  ChatpressV1Application.java
+  artifact/
+    Artifact.java
+    ArtifactController.java
+    ArtifactRepository.java
+    ArtifactService.java
+    MarkdownRenderer.java
+    PublicPageController.java
+    PublicPageRenderer.java
+    dto/
+      ArtifactRequest.java
+      ArtifactResponse.java
+      ArtifactStatusRequest.java
+      ArtifactSummaryResponse.java
+    exception/
+      ArtifactNotFoundException.java
+      DuplicateSlugException.java
+  common/
+    ApiErrorResponse.java
+    ApiExceptionHandler.java
+  system/
+    HealthController.java
+src/test/java/com/chatpress/v1/
+  ChatpressV1ApplicationTests.java
+  artifact/ArtifactControllerTest.java
+  system/HealthControllerTest.java
+docs/
+  API.md
+  DATA_MODEL.md
+  PRODUCT.md
+```
+
+## 文档入口
+
+- [产品定义](docs/PRODUCT.md)
+- [数据模型](docs/DATA_MODEL.md)
+- [API 设计](docs/API.md)
+
+## 当前进度
+
+基础内容系统已经完成。按完整产品 MVP 估算，当前约完成 35%。后端基础能力已经比较完整，但 ChatPress 的差异化能力才刚开始。
+
+下一步建议做：
+
+```text
+AI 聊天记录解析
+```
+
+先支持一种简单格式：
+
+```text
+User: ...
+Assistant: ...
+```
+
+然后把它转换成 Markdown 草稿，再复用现有 Markdown 渲染和公开发布链路。
