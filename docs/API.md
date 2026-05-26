@@ -42,24 +42,16 @@ Markdown：
 ```json
 {
   "title": "Spring Boot Notes",
-  "slug": "spring-boot-notes",
-  "sourceType": "markdown",
   "sourceContent": "# Spring Boot Notes\n\nController receives HTTP requests."
 }
-```
-
-`sourceType` 可以不传。不传时默认为：
-
-```text
-markdown
 ```
 
 ### 字段说明
 
 - `title` 必填。
-- `slug` 必填，且必须唯一。
-- `sourceType` 可选，V1 主要使用 `markdown`。`ai_chat` 字段值暂时保留为后续扩展。
 - `sourceContent` 必填。
+- `slug` 不由请求传入，后端根据 `title` 自动生成，并在重复时自动追加数字后缀。
+- `sourceType` 不由请求传入，V1 固定为 `markdown`。
 - `sourceFormat` 由后端固定为 `markdown`。
 - 创建后默认状态为 `published`。
 
@@ -92,19 +84,6 @@ markdown
 {
   "code": "VALIDATION_FAILED",
   "message": "Request validation failed"
-}
-```
-
-slug 重复：
-
-```text
-409 Conflict
-```
-
-```json
-{
-  "code": "DUPLICATE_SLUG",
-  "message": "Artifact slug already exists: spring-boot-notes"
 }
 ```
 
@@ -184,17 +163,16 @@ PUT /api/artifacts/{id}
 ```json
 {
   "title": "Updated Spring Boot Notes",
-  "slug": "updated-spring-boot-notes",
-  "sourceType": "markdown",
   "sourceContent": "# Updated Spring Boot Notes\n\nService handles business logic."
 }
 ```
 
 ### 说明
 
-- 更新标题、slug、sourceType、sourceContent。
+- 更新标题和 sourceContent。
+- 更新不会改变 `slug`。
 - 如果 `sourceContent` 变化，后端重新生成 `renderedHtml`。
-- 如果不传 `sourceType`，默认按 `markdown` 处理。
+- `sourceType` 保持为 `markdown`。
 - 更新内容不会自动改变 `status`。
 
 ### 响应体
@@ -203,7 +181,7 @@ PUT /api/artifacts/{id}
 {
   "id": 1,
   "title": "Updated Spring Boot Notes",
-  "slug": "updated-spring-boot-notes",
+  "slug": "spring-boot-notes",
   "sourceFormat": "markdown",
   "sourceType": "markdown",
   "sourceContent": "# Updated Spring Boot Notes\n\nService handles business logic.",
@@ -218,7 +196,6 @@ PUT /api/artifacts/{id}
 
 - `400 Bad Request`：参数校验失败。
 - `404 Not Found`：artifact 不存在。
-- `409 Conflict`：新的 slug 已被其他 artifact 使用。
 
 ## 7. 修改发布状态
 
@@ -337,7 +314,6 @@ JSON API 错误统一返回：
 |---|---:|---|
 | `VALIDATION_FAILED` | 400 | 请求参数不合法。 |
 | `ARTIFACT_NOT_FOUND` | 404 | artifact 不存在。 |
-| `DUPLICATE_SLUG` | 409 | slug 已存在。 |
 
 公开页面接口是 HTML 页面入口，404 时不返回 JSON 错误体。
 

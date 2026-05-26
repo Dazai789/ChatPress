@@ -33,7 +33,7 @@ class ArtifactControllerTest {
 
     @Test
     void createArtifact() throws Exception {
-        createArtifact("Java Notes", "java-notes", "# Java Notes")
+        createArtifact("Java Notes", "# Java Notes")
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Java Notes"))
                 .andExpect(jsonPath("$.slug").value("java-notes"))
@@ -43,29 +43,34 @@ class ArtifactControllerTest {
     }
 
     @Test
-    void createAiChatArtifact() throws Exception {
-        createArtifact("AI Chat Notes", "ai-chat-notes", "ai_chat", "User: What is Spring Boot?\nAssistant: A Java framework.")
+    void createArtifactGeneratesSlugWhenMissing() throws Exception {
+        createArtifact("Spring Boot Notes", "# Spring Boot Notes")
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.title").value("AI Chat Notes"))
-                .andExpect(jsonPath("$.slug").value("ai-chat-notes"))
-                .andExpect(jsonPath("$.sourceType").value("ai_chat"))
-                .andExpect(jsonPath("$.status").value("published"));
+                .andExpect(jsonPath("$.title").value("Spring Boot Notes"))
+                .andExpect(jsonPath("$.slug").value("spring-boot-notes"));
     }
 
     @Test
-    void rejectDuplicateSlug() throws Exception {
-        createArtifact("First Note", "duplicate-slug", "# First Note")
-                .andExpect(status().isCreated());
+    void createArtifactGeneratesUniqueSlugWhenTitleRepeats() throws Exception {
+        createArtifact("Repeat Notes", "# Repeat Notes")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.slug").value("repeat-notes"));
 
-        createArtifact("Second Note", "duplicate-slug", "# Second Note")
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("DUPLICATE_SLUG"))
-                .andExpect(jsonPath("$.message").value("Artifact slug already exists: duplicate-slug"));
+        createArtifact("Repeat Notes", "# Repeat Notes Again")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.slug").value("repeat-notes-2"));
+    }
+
+    @Test
+    void createArtifactUsesFallbackSlugWhenTitleHasNoUrlFriendlyText() throws Exception {
+        createArtifact("中文标题", "# 中文标题")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.slug").value("artifact"));
     }
 
     @Test
     void rejectInvalidRequest() throws Exception {
-        createArtifact("", "invalid-request", "# Invalid Request")
+        createArtifact("", "# Invalid Request")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
                 .andExpect(jsonPath("$.message").value("Request validation failed"));
@@ -81,7 +86,7 @@ class ArtifactControllerTest {
 
     @Test
     void getArtifactById() throws Exception {
-        MvcResult result = createArtifact("Backend Notes", "backend-notes", "# Backend Notes")
+        MvcResult result = createArtifact("Backend Notes", "# Backend Notes")
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -98,9 +103,9 @@ class ArtifactControllerTest {
 
     @Test
     void listArtifactsReturnsSummary() throws Exception {
-        createArtifact("Older List Notes", "older-list-notes", "# Older List Notes")
+        createArtifact("Older List Notes", "# Older List Notes")
                 .andExpect(status().isCreated());
-        createArtifact("Newer List Notes", "newer-list-notes", "# Newer List Notes")
+        createArtifact("Newer List Notes", "# Newer List Notes")
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/artifacts"))
@@ -115,7 +120,7 @@ class ArtifactControllerTest {
 
     @Test
     void updateArtifact() throws Exception {
-        MvcResult result = createArtifact("Old Notes", "old-notes", "# Old Notes")
+        MvcResult result = createArtifact("Old Notes", "# Old Notes")
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -123,11 +128,11 @@ class ArtifactControllerTest {
 
         mockMvc.perform(put("/api/artifacts/{id}", artifactId)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(artifactJson("Updated Notes", "updated-notes", "# Updated Notes")))
+                        .content(artifactJson("Updated Notes", "# Updated Notes")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(artifactId))
                 .andExpect(jsonPath("$.title").value("Updated Notes"))
-                .andExpect(jsonPath("$.slug").value("updated-notes"))
+                .andExpect(jsonPath("$.slug").value("old-notes"))
                 .andExpect(jsonPath("$.sourceType").value("markdown"))
                 .andExpect(jsonPath("$.status").value("published"))
                 .andExpect(jsonPath("$.renderedHtml").value("<h1>Updated Notes</h1>\n"));
@@ -135,7 +140,7 @@ class ArtifactControllerTest {
 
     @Test
     void updateArtifactStatus() throws Exception {
-        MvcResult result = createArtifact("Status Notes", "status-notes", "# Status Notes")
+        MvcResult result = createArtifact("Status Notes", "# Status Notes")
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -151,7 +156,7 @@ class ArtifactControllerTest {
 
     @Test
     void deleteArtifact() throws Exception {
-        MvcResult result = createArtifact("Delete Notes", "delete-notes", "# Delete Notes")
+        MvcResult result = createArtifact("Delete Notes", "# Delete Notes")
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -168,10 +173,10 @@ class ArtifactControllerTest {
 
     @Test
     void getPublicPageBySlug() throws Exception {
-        createArtifact("Public <Notes> & Tips", "public-notes", "# Public Notes")
+        createArtifact("Public <Notes> & Tips", "# Public Notes")
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/p/public-notes"))
+        mockMvc.perform(get("/p/public-notes-tips"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<!doctype html>")))
@@ -201,7 +206,7 @@ class ArtifactControllerTest {
                 Read [Spring](https://spring.io).
                 """;
 
-        createArtifact("Markdown Guide", "markdown-guide", markdown)
+        createArtifact("Markdown Guide", markdown)
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/p/markdown-guide"))
@@ -219,7 +224,7 @@ class ArtifactControllerTest {
 
     @Test
     void returnNotFoundForDraftPublicPage() throws Exception {
-        MvcResult result = createArtifact("Draft Notes", "draft-notes", "# Draft Notes")
+        MvcResult result = createArtifact("Draft Notes", "# Draft Notes")
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -236,38 +241,16 @@ class ArtifactControllerTest {
 
     private ResultActions createArtifact(
             String title,
-            String slug,
             String sourceContent
     ) throws Exception {
         return mockMvc.perform(post("/api/artifacts")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(artifactJson(title, slug, sourceContent)));
+                .content(artifactJson(title, sourceContent)));
     }
 
-    private ResultActions createArtifact(
-            String title,
-            String slug,
-            String sourceType,
-            String sourceContent
-    ) throws Exception {
-        return mockMvc.perform(post("/api/artifacts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(artifactJson(title, slug, sourceType, sourceContent)));
-    }
-
-    private String artifactJson(String title, String slug, String sourceContent) throws Exception {
+    private String artifactJson(String title, String sourceContent) throws Exception {
         return objectMapper.writeValueAsString(Map.of(
                 "title", title,
-                "slug", slug,
-                "sourceContent", sourceContent
-        ));
-    }
-
-    private String artifactJson(String title, String slug, String sourceType, String sourceContent) throws Exception {
-        return objectMapper.writeValueAsString(Map.of(
-                "title", title,
-                "slug", slug,
-                "sourceType", sourceType,
                 "sourceContent", sourceContent
         ));
     }

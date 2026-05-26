@@ -1,11 +1,11 @@
 package com.chatpress.v1.artifact;
 
 import com.chatpress.v1.artifact.exception.ArtifactNotFoundException;
-import com.chatpress.v1.artifact.exception.DuplicateSlugException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -19,11 +19,11 @@ public class ArtifactService {
         this.markdownRenderer = markdownRenderer;
     }
 
-    public Artifact createArtifact(String title, String slug, Artifact.SourceType sourceType, String sourceContent) {
-        ensureSlugAvailableForCreate(slug);
+    public Artifact createArtifact(String title, String sourceContent) {
+        String finalSlug = generateSlug(title);
 
-        Artifact artifact = new Artifact(title, slug, sourceContent, markdownRenderer.render(sourceContent));
-        artifact.setSourceType(sourceType);
+        Artifact artifact = new Artifact(title, finalSlug, sourceContent, markdownRenderer.render(sourceContent));
+        artifact.setSourceType(Artifact.SourceType.MARKDOWN);
         artifact.setStatus(Artifact.Status.PUBLISHED);
         return artifactRepository.save(artifact);
     }
@@ -45,12 +45,10 @@ public class ArtifactService {
         return artifactRepository.findBySlugAndStatus(slug, Artifact.Status.PUBLISHED);
     }
 
-    public Artifact updateArtifactOrThrow(Long id, String title, String slug, Artifact.SourceType sourceType, String sourceContent) {
+    public Artifact updateArtifactOrThrow(Long id, String title, String sourceContent) {
         Artifact artifact = getArtifactOrThrow(id);
-        ensureSlugAvailableForUpdate(slug, artifact.getId());
         artifact.setTitle(title);
-        artifact.setSlug(slug);
-        artifact.setSourceType(sourceType);
+        artifact.setSourceType(Artifact.SourceType.MARKDOWN);
         artifact.setSourceContent(sourceContent);
         artifact.setRenderedHtml(markdownRenderer.render(sourceContent));
         return artifactRepository.save(artifact);
@@ -67,17 +65,26 @@ public class ArtifactService {
         artifactRepository.deleteById(id);
     }
 
-    private void ensureSlugAvailableForCreate(String slug) {
-        if (artifactRepository.findBySlug(slug).isPresent()) {
-            throw new DuplicateSlugException(slug);
+    private String generateSlug(String title) {
+        String baseSlug = slugifyTitle(title);
+        String candidateSlug = baseSlug;
+        int suffix = 2;
+        while (artifactRepository.findBySlug(candidateSlug).isPresent()) {
+            candidateSlug = baseSlug + "-" + suffix;
+            suffix++;
         }
+        return candidateSlug;
     }
 
-    private void ensureSlugAvailableForUpdate(String slug, Long currentArtifactId) {
-        artifactRepository.findBySlug(slug)
-                .filter(existingArtifact -> !existingArtifact.getId().equals(currentArtifactId))
-                .ifPresent(existingArtifact -> {
-                    throw new DuplicateSlugException(slug);
-                });
+    private String slugifyTitle(String title) {
+        String slug = title.toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("(^-+|-+$)", "")
+                .replaceAll("-+", "-");
+
+        if (slug.isBlank()) {
+            return "artifact";
+        }
+        return slug;
     }
 }

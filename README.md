@@ -7,8 +7,9 @@ chatpress-v1 是一个轻量级 Markdown 页面发布系统。它的第一版目
 这个项目目前处于后端 MVP 阶段。V1 当前专注一条基础 Markdown 发布链路：
 
 ```text
-输入标题、slug、Markdown 内容
+输入标题、Markdown 内容
 -> 保存为 Artifact
+-> 后端自动生成 slug
 -> 渲染为 HTML
 -> 控制草稿或发布状态
 -> 通过 /p/{slug} 公开访问
@@ -30,7 +31,7 @@ AI 聊天记录或网页 HTML
 - H2 内存数据库。
 - Spring Data JPA 数据访问。
 - Artifact 创建、列表、详情、更新、删除。
-- slug 唯一性校验。
+- slug 自动生成和唯一性处理。
 - Markdown 转 HTML。
 - 公开页面访问：`GET /p/{slug}`。
 - 公开页面基础样式。
@@ -63,7 +64,7 @@ GET    /p/{slug}
 |---|---|
 | `id` | 内部主键 |
 | `title` | 页面标题 |
-| `slug` | 公开 URL 标识 |
+| `slug` | 后端自动生成的公开 URL 标识 |
 | `sourceFormat` | 内容格式，目前固定为 `markdown` |
 | `sourceType` | 内容来源，V1 主要使用 `markdown`，`ai_chat` 作为后续扩展 |
 | `sourceContent` | 用户输入的原始内容 |
@@ -105,7 +106,6 @@ src/main/java/com/chatpress/v1/
       ArtifactSummaryResponse.java
     exception/
       ArtifactNotFoundException.java
-      DuplicateSlugException.java
   common/
     ApiErrorResponse.java
     ApiExceptionHandler.java
@@ -142,6 +142,5 @@ Markdown 发布体验打磨
 ```text
 优化公开页面 HTML 样式
 完善 Markdown 渲染效果
-增加最小可用创建页面
 再考虑 Markdown 预览
 ```

@@ -114,9 +114,13 @@ ai_chat
 
 规则：
 
-- 必填。
+- 后端根据 `title` 自动生成。
+- API 请求中不需要传入。
 - 唯一。
-- 创建和更新时都要检查重复。
+- 只允许小写字母、数字和单横线。
+- 不能以横线开头或结尾。
+- 不能出现连续横线。
+- 创建时自动检查重复，重复时追加数字后缀。
 
 ### `sourceFormat`
 
@@ -172,11 +176,12 @@ Controller receives HTTP requests.
 当前强制规则：
 
 - `title` 不能为空。
-- `slug` 不能为空。
+- API 请求中不接收 `slug`。
 - `slug` 必须唯一。
+- `slug` 格式必须匹配 `[a-z0-9]+(-[a-z0-9]+)*`。
 - `sourceContent` 不能为空。
-- `sourceType` 如果传入，只能是 `markdown` 或当前预留的 `ai_chat`。
-- `sourceType` 不传时默认为 `markdown`。
+- API 请求中不接收 `sourceType`。
+- V1 创建和更新时 `sourceType` 固定为 `markdown`。
 - `sourceFormat` 当前固定为 `markdown`。
 - 修改 `sourceContent` 时必须重新生成 `renderedHtml`。
 - 公开页面只展示 `published` 内容。

@@ -38,6 +38,7 @@ chatpress-v1 的定位是：
 ```text
 用户输入 Markdown 内容
 -> 创建 Artifact
+-> 系统根据标题自动生成 slug
 -> 系统保存原始内容
 -> 系统渲染 HTML
 -> 用户设置 draft / published
@@ -60,7 +61,7 @@ chatpress-v1 的定位是：
 - 简单公开页面样式。
 - 标题 HTML 转义。
 - 统一异常返回。
-- slug 重复校验。
+- slug 自动生成和唯一性处理。
 - 草稿 / 发布状态控制。
 - 公开页面只展示 `published` 内容。
 - 内容来源字段 `sourceType`，V1 主要使用 `markdown`。
@@ -94,8 +95,6 @@ chatpress-v1 的定位是：
 ```text
 创建 artifact
 -> 输入 title
--> 输入 slug
--> 默认使用 sourceType = markdown
 -> 粘贴 Markdown 内容
 -> 保存
 -> 修改状态为 published
@@ -115,7 +114,7 @@ chatpress-v1 的定位是：
 `Artifact` 表示一篇可发布的知识页面，包含：
 
 - 标题。
-- slug。
+- slug，后端根据标题自动生成。
 - 内容格式。
 - 内容来源。
 - 原始内容。
@@ -146,8 +145,7 @@ Markdown 发布体验打磨
 ```text
 1. 优化公开页面 HTML 样式。
 2. 完善 Markdown 渲染效果，重点关注标题、列表、代码块、链接。
-3. 增加最小可用创建页面。
-4. 再考虑 Markdown 预览。
+3. 再考虑 Markdown 预览。
 ```
 
 AI 聊天记录导入、网页 HTML 导入、浏览器扩展放到后续版本：

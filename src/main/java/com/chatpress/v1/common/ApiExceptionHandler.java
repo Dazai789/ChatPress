@@ -1,7 +1,6 @@
 package com.chatpress.v1.common;
 
 import com.chatpress.v1.artifact.exception.ArtifactNotFoundException;
-import com.chatpress.v1.artifact.exception.DuplicateSlugException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,12 +14,6 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleArtifactNotFound(ArtifactNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiErrorResponse("ARTIFACT_NOT_FOUND", exception.getMessage()));
-    }
-
-    @ExceptionHandler(DuplicateSlugException.class)
-    public ResponseEntity<ApiErrorResponse> handleDuplicateSlug(DuplicateSlugException exception) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ApiErrorResponse("DUPLICATE_SLUG", exception.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
