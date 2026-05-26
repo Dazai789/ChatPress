@@ -162,6 +162,18 @@ Controller receives HTTP requests.
 
 由 `MarkdownRenderer` 从 `sourceContent` 生成。
 
+当前支持常见 Markdown 和扩展语法：
+
+- 标题。
+- 段落。
+- 列表。
+- 引用。
+- 行内代码和代码块。
+- 链接和自动链接。
+- 表格。
+- 任务列表。
+- 删除线。
+
 示例：
 
 ```html

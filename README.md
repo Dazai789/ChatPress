@@ -33,6 +33,7 @@ AI 聊天记录或网页 HTML
 - Artifact 创建、列表、详情、更新、删除。
 - slug 自动生成和唯一性处理。
 - Markdown 转 HTML。
+- Markdown 扩展渲染：表格、任务列表、删除线、自动链接。
 - 公开页面访问：`GET /p/{slug}`。
 - 公开页面基础样式。
 - 公开页面标题 HTML 转义。
@@ -81,7 +82,7 @@ GET    /p/{slug}
 - H2
 - Spring Data JPA
 - Bean Validation
-- CommonMark
+- CommonMark 及扩展
 - JUnit / MockMvc
 
 当前数据库是 H2 内存数据库。运行或测试时会临时创建，项目停止后数据会消失。等功能稳定后再切换 MySQL。
@@ -141,6 +142,5 @@ Markdown 发布体验打磨
 
 ```text
 优化公开页面 HTML 样式
-完善 Markdown 渲染效果
 再考虑 Markdown 预览
 ```

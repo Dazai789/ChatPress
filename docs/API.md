@@ -53,6 +53,7 @@ Markdown：
 - `slug` 不由请求传入，后端根据 `title` 自动生成，并在重复时自动追加数字后缀。
 - `sourceType` 不由请求传入，V1 固定为 `markdown`。
 - `sourceFormat` 由后端固定为 `markdown`。
+- Markdown 支持标题、段落、列表、引用、代码块、链接、表格、任务列表、删除线和自动链接。
 - 创建后默认状态为 `published`。
 
 ### 响应体

@@ -57,6 +57,7 @@ chatpress-v1 的定位是：
 - 查看 artifact 列表。
 - 查看 artifact 详情。
 - Markdown 渲染为 HTML。
+- Markdown 扩展渲染：表格、任务列表、删除线、自动链接。
 - 基于 slug 的公开页面访问。
 - 简单公开页面样式。
 - 标题 HTML 转义。
@@ -144,8 +145,7 @@ Markdown 发布体验打磨
 
 ```text
 1. 优化公开页面 HTML 样式。
-2. 完善 Markdown 渲染效果，重点关注标题、列表、代码块、链接。
-3. 再考虑 Markdown 预览。
+2. 再考虑 Markdown 预览。
 ```
 
 AI 聊天记录导入、网页 HTML 导入、浏览器扩展放到后续版本：
