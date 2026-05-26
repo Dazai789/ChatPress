@@ -11,11 +11,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.mock.web.MockMultipartFile;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -69,6 +72,76 @@ class ArtifactControllerTest {
         createArtifact("中文标题", "# 中文标题")
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.slug").value("artifact"));
+    }
+
+    @Test
+    void importMarkdownFileWithTitle() throws Exception {
+        MockMultipartFile file = markdownFile("macdown.md", "# Imported Notes");
+
+        mockMvc.perform(multipart("/api/artifacts/import/markdown")
+                        .file(file)
+                        .param("title", "Imported From MacDown"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("Imported From MacDown"))
+                .andExpect(jsonPath("$.slug").value("imported-from-macdown"))
+                .andExpect(jsonPath("$.sourceFormat").value("markdown"))
+                .andExpect(jsonPath("$.sourceContent").value("# Imported Notes"))
+                .andExpect(jsonPath("$.renderedHtml").value("<h1>Imported Notes</h1>\n"));
+    }
+
+    @Test
+    void importMarkdownFileUsesFilenameWhenTitleMissing() throws Exception {
+        MockMultipartFile file = markdownFile("MacDown Export.md", "# Filename Notes");
+
+        mockMvc.perform(multipart("/api/artifacts/import/markdown")
+                        .file(file))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("MacDown Export"))
+                .andExpect(jsonPath("$.slug").value("macdown-export"));
+    }
+
+    @Test
+    void rejectNonMarkdownImportFile() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "notes.txt",
+                MediaType.TEXT_PLAIN_VALUE,
+                "# Notes".getBytes(StandardCharsets.UTF_8)
+        );
+
+        mockMvc.perform(multipart("/api/artifacts/import/markdown")
+                        .file(file))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_MARKDOWN_FILE"))
+                .andExpect(jsonPath("$.message").value("Only .md files are supported"));
+    }
+
+    @Test
+    void rejectEmptyMarkdownImportFile() throws Exception {
+        MockMultipartFile file = markdownFile("empty.md", "");
+
+        mockMvc.perform(multipart("/api/artifacts/import/markdown")
+                        .file(file))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_MARKDOWN_FILE"))
+                .andExpect(jsonPath("$.message").value("Markdown file is required"));
+    }
+
+    @Test
+    void rejectOversizedMarkdownImportFile() throws Exception {
+        byte[] content = new byte[(2 * 1024 * 1024) + 1];
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "large.md",
+                "text/markdown",
+                content
+        );
+
+        mockMvc.perform(multipart("/api/artifacts/import/markdown")
+                        .file(file))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_MARKDOWN_FILE"))
+                .andExpect(jsonPath("$.message").value("Markdown file must be 2MB or smaller"));
     }
 
     @Test
@@ -300,6 +373,15 @@ class ArtifactControllerTest {
 
     private String statusJson(String status) throws Exception {
         return objectMapper.writeValueAsString(Map.of("status", status));
+    }
+
+    private MockMultipartFile markdownFile(String filename, String content) {
+        return new MockMultipartFile(
+                "file",
+                filename,
+                "text/markdown",
+                content.getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     private Integer artifactIdFrom(MvcResult result) throws Exception {

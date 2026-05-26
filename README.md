@@ -31,6 +31,7 @@ AI 聊天记录或网页 HTML
 - H2 内存数据库。
 - Spring Data JPA 数据访问。
 - Artifact 创建、列表、详情、更新、删除。
+- Markdown 文件上传 / 导入。
 - slug 自动生成和唯一性处理。
 - Markdown 转 HTML。
 - Markdown 扩展渲染：表格、任务列表、删除线、自动链接。
@@ -44,8 +45,6 @@ AI 聊天记录或网页 HTML
 
 ## 当前欠缺能力
 
-- 还没有 Markdown 文件上传 / 导入接口。
-- 还不能直接读取 MacDown 导出的 `.md` 文件。
 - 还没有后台管理页面，当前主要通过 API 操作。
 - 还没有登录、鉴权和用户隔离。
 - 公开 HTML 还没有做安全过滤。
@@ -56,6 +55,7 @@ AI 聊天记录或网页 HTML
 
 ```text
 POST   /api/artifacts
+POST   /api/artifacts/import/markdown
 GET    /api/artifacts
 GET    /api/artifacts/{id}
 PUT    /api/artifacts/{id}
@@ -121,6 +121,7 @@ src/main/java/com/chatpress/v1/
       ArtifactSummaryResponse.java
     exception/
       ArtifactNotFoundException.java
+      InvalidMarkdownImportException.java
   common/
     ApiErrorResponse.java
     ApiExceptionHandler.java
@@ -129,6 +130,7 @@ src/main/java/com/chatpress/v1/
 src/test/java/com/chatpress/v1/
   ChatpressV1ApplicationTests.java
   artifact/ArtifactControllerTest.java
+  artifact/MarkdownRendererTest.java
   system/HealthControllerTest.java
 docs/
   API.md
@@ -144,18 +146,18 @@ docs/
 
 ## 当前进度
 
-基础 Markdown 发布链路已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步应优先补齐 Markdown 文件导入。
+基础 Markdown 发布链路和 Markdown 文件导入已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步应优先补齐公开 HTML 的安全过滤。
 
 下一步建议做：
 
 ```text
-Markdown 文件导入
+HTML 安全过滤
 ```
 
 优先方向：
 
 ```text
-增加 .md 文件上传接口
-读取文件内容并复用现有 Artifact 创建逻辑
-补齐文件类型、大小和空内容校验
+过滤 Markdown 中直接写入的不安全 HTML
+保留常见安全标签和 Markdown 渲染结果
+为脚本、事件属性、危险链接补测试
 ```

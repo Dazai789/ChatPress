@@ -1,6 +1,7 @@
 package com.chatpress.v1.common;
 
 import com.chatpress.v1.artifact.exception.ArtifactNotFoundException;
+import com.chatpress.v1.artifact.exception.InvalidMarkdownImportException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -10,6 +11,8 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,6 +24,24 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleArtifactNotFound(ArtifactNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiErrorResponse("ARTIFACT_NOT_FOUND", exception.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidMarkdownImportException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidMarkdownImport(InvalidMarkdownImportException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiErrorResponse("INVALID_MARKDOWN_FILE", exception.getMessage()));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingRequestPart(MissingServletRequestPartException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiErrorResponse("INVALID_MARKDOWN_FILE", "Markdown file is required"));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiErrorResponse("INVALID_MARKDOWN_FILE", "Markdown file must be 2MB or smaller"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

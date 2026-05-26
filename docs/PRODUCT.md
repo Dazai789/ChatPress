@@ -45,7 +45,7 @@ chatpress-v1 的定位是：
 -> published 内容可通过 /p/{slug} 公开访问
 ```
 
-下一阶段仍然围绕这条链路打磨：先补齐 Markdown 文件导入，再继续优化公开页面展示。
+下一阶段仍然围绕这条链路打磨：先补齐 HTML 安全过滤，再继续优化公开页面展示。
 
 ## 5. MVP 已完成范围
 
@@ -56,6 +56,7 @@ chatpress-v1 的定位是：
 - 删除 artifact。
 - 查看 artifact 列表。
 - 查看 artifact 详情。
+- Markdown 文件上传 / 导入。
 - Markdown 渲染为 HTML。
 - Markdown 扩展渲染：表格、任务列表、删除线、自动链接。
 - 基于 slug 的公开页面访问。
@@ -81,7 +82,6 @@ chatpress-v1 的定位是：
 - 浏览器扩展。
 - 用户账号和权限系统。
 - 多用户协作。
-- 文件上传。
 - DOCX / PDF 解析。
 - 语义搜索。
 - 知识图谱。
@@ -97,8 +97,6 @@ chatpress-v1 的定位是：
 
 当前后端基础发布链路已经打通，但还不是完整产品，主要缺口是：
 
-- 没有 Markdown 文件上传 / 导入接口。
-- 没有真正读取 MacDown 导出的 `.md` 文件。
 - 没有 HTML 安全过滤，后续需要避免不安全 HTML 直接展示。
 - 没有后台管理页面，当前只能通过 API 管理内容。
 - 没有登录、鉴权和用户隔离。
@@ -110,8 +108,7 @@ chatpress-v1 的定位是：
 
 ```text
 创建 artifact
--> 输入 title
--> 粘贴 Markdown 内容
+-> 输入 title 和 Markdown 内容，或上传 .md 文件
 -> 保存
 -> 修改状态为 published
 -> 打开公开页面 URL
@@ -151,17 +148,16 @@ chatpress-v1 的定位是：
 下一阶段建议实现：
 
 ```text
-Markdown 文件导入
+HTML 安全过滤
 ```
 
 优先级：
 
 ```text
-1. 增加 .md 文件上传接口。
-2. 后端读取文件内容并复用现有 Artifact 创建逻辑。
-3. 校验文件类型、文件大小和空内容。
-4. 自动使用文件名或请求 title 生成标题。
-5. 为导入接口补 controller 测试。
+1. 过滤 Markdown 中直接写入的不安全 HTML。
+2. 阻止 script、事件属性和危险链接进入公开页面。
+3. 保留正常 Markdown 渲染出来的常见标签。
+4. 为 HTML 安全过滤补 renderer 测试。
 ```
 
 AI 聊天记录导入、网页 HTML 导入、浏览器扩展放到后续版本：

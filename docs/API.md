@@ -8,6 +8,7 @@
 
 ```text
 创建 Artifact
+-> 或上传 .md 文件导入 Artifact
 -> 保存原始内容
 -> 渲染 HTML
 -> 查询、更新、删除
@@ -89,7 +90,57 @@ Markdown：
 }
 ```
 
-## 4. 列出 Artifacts
+## 4. 导入 Markdown 文件
+
+```text
+POST /api/artifacts/import/markdown
+Content-Type: multipart/form-data
+```
+
+### 表单字段
+
+| 字段 | 必填 | 说明 |
+|---|---:|---|
+| `file` | 是 | `.md` 文件，UTF-8 文本，最大 2MB。 |
+| `title` | 否 | 页面标题。不传时使用文件名去掉 `.md` 后的结果。 |
+
+### 示例
+
+```text
+file: Spring Notes.md
+title: Spring Boot Notes
+```
+
+### 说明
+
+- 只支持 `.md` 文件。
+- 空文件会被拒绝。
+- 文件超过 2MB 会被拒绝。
+- 导入后复用 Artifact 创建逻辑。
+- 后端自动生成 `slug`。
+- 后端自动生成 `renderedHtml`。
+- 创建后默认状态为 `published`。
+
+### 响应体
+
+返回完整 Artifact，格式与 `POST /api/artifacts` 相同。
+
+### 可能错误
+
+文件不合法：
+
+```text
+400 Bad Request
+```
+
+```json
+{
+  "code": "INVALID_MARKDOWN_FILE",
+  "message": "Only .md files are supported"
+}
+```
+
+## 5. 列出 Artifacts
 
 ```text
 GET /api/artifacts
@@ -118,7 +169,7 @@ GET /api/artifacts
 - 不返回 `sourceContent`。
 - 不返回 `renderedHtml`。
 
-## 5. 获取 Artifact 详情
+## 6. 获取 Artifact 详情
 
 ```text
 GET /api/artifacts/{id}
@@ -153,7 +204,7 @@ GET /api/artifacts/{id}
 }
 ```
 
-## 6. 更新 Artifact
+## 7. 更新 Artifact
 
 ```text
 PUT /api/artifacts/{id}
@@ -196,7 +247,7 @@ PUT /api/artifacts/{id}
 - `400 Bad Request`：参数校验失败。
 - `404 Not Found`：artifact 不存在。
 
-## 7. 修改发布状态
+## 8. 修改发布状态
 
 ```text
 PUT /api/artifacts/{id}/status
@@ -244,7 +295,7 @@ PUT /api/artifacts/{id}/status
 - 草稿仍可通过后台详情接口查看。
 - 草稿不能通过公开页面访问。
 
-## 8. 删除 Artifact
+## 9. 删除 Artifact
 
 ```text
 DELETE /api/artifacts/{id}
@@ -269,7 +320,7 @@ DELETE /api/artifacts/{id}
 }
 ```
 
-## 9. 公开页面
+## 10. 公开页面
 
 ```text
 GET /p/{slug}
@@ -295,7 +346,7 @@ GET /p/spring-boot-notes
 text/html
 ```
 
-## 10. 当前错误响应格式
+## 11. 当前错误响应格式
 
 JSON API 错误统一返回：
 
@@ -326,13 +377,14 @@ JSON API 错误统一返回：
 | `VALIDATION_FAILED` | 400 | 请求参数不合法。 |
 | `INVALID_REQUEST_BODY` | 400 | 请求体缺失或 JSON 格式错误。 |
 | `INVALID_PATH_VARIABLE` | 400 | 路径参数类型不合法。 |
+| `INVALID_MARKDOWN_FILE` | 400 | Markdown 导入文件不合法。 |
 | `ARTIFACT_NOT_FOUND` | 404 | artifact 不存在。 |
 | `METHOD_NOT_ALLOWED` | 405 | HTTP 方法不支持。 |
 | `UNSUPPORTED_MEDIA_TYPE` | 415 | Content-Type 不支持。 |
 
 公开页面接口是 HTML 页面入口，404 时不返回 JSON 错误体。
 
-## 11. 暂不实现的 API
+## 12. 暂不实现的 API
 
 当前不做：
 
@@ -341,7 +393,6 @@ JSON API 错误统一返回：
 - 标签。
 - 搜索。
 - 分页。
-- 文件上传。
 - 自动读取 AI 平台聊天记录。
 - LLM 总结。
 - DOCX / PDF 导入。

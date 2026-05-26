@@ -1,15 +1,23 @@
 package com.chatpress.v1.artifact;
 
 import com.chatpress.v1.artifact.exception.ArtifactNotFoundException;
+import com.chatpress.v1.artifact.exception.InvalidMarkdownImportException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
 @Service
 public class ArtifactService {
+
+    private static final long MAX_MARKDOWN_FILE_SIZE = 2 * 1024 * 1024;
+    private static final int MAX_TITLE_LENGTH = 200;
 
     private final ArtifactRepository artifactRepository;
     private final MarkdownRenderer markdownRenderer;
@@ -25,6 +33,21 @@ public class ArtifactService {
         Artifact artifact = new Artifact(title, finalSlug, sourceContent, markdownRenderer.render(sourceContent));
         artifact.setStatus(Artifact.Status.PUBLISHED);
         return artifactRepository.save(artifact);
+    }
+
+    public Artifact importMarkdownFile(MultipartFile file, String title) {
+        validateMarkdownFile(file);
+
+        String finalTitle = normalizeTitle(title)
+                .orElseGet(() -> titleFromFilename(file.getOriginalFilename()));
+        validateTitle(finalTitle);
+
+        String sourceContent = readMarkdownContent(file);
+        if (sourceContent.isBlank()) {
+            throw new InvalidMarkdownImportException("Markdown file must not be empty");
+        }
+
+        return createArtifact(finalTitle, sourceContent);
     }
 
     public List<Artifact> listArtifacts() {
@@ -84,5 +107,54 @@ public class ArtifactService {
             return "artifact";
         }
         return slug;
+    }
+
+    private void validateMarkdownFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new InvalidMarkdownImportException("Markdown file is required");
+        }
+
+        if (file.getSize() > MAX_MARKDOWN_FILE_SIZE) {
+            throw new InvalidMarkdownImportException("Markdown file must be 2MB or smaller");
+        }
+
+        String filename = StringUtils.cleanPath(Optional.ofNullable(file.getOriginalFilename()).orElse(""));
+        if (!filename.toLowerCase(Locale.ROOT).endsWith(".md")) {
+            throw new InvalidMarkdownImportException("Only .md files are supported");
+        }
+    }
+
+    private String readMarkdownContent(MultipartFile file) {
+        try {
+            return new String(file.getBytes(), StandardCharsets.UTF_8);
+        } catch (IOException exception) {
+            throw new InvalidMarkdownImportException("Markdown file could not be read");
+        }
+    }
+
+    private Optional<String> normalizeTitle(String title) {
+        if (title == null || title.isBlank()) {
+            return Optional.empty();
+        }
+        return Optional.of(title.trim());
+    }
+
+    private String titleFromFilename(String originalFilename) {
+        String filename = StringUtils.getFilename(Optional.ofNullable(originalFilename).orElse(""));
+        if (filename == null || filename.isBlank()) {
+            return "Untitled";
+        }
+
+        String title = filename.replaceFirst("(?i)\\.md$", "").trim();
+        if (title.isBlank()) {
+            return "Untitled";
+        }
+        return title;
+    }
+
+    private void validateTitle(String title) {
+        if (title.length() > MAX_TITLE_LENGTH) {
+            throw new InvalidMarkdownImportException("Title must be 200 characters or fewer");
+        }
     }
 }
