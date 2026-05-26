@@ -15,6 +15,7 @@ import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -73,7 +74,8 @@ class ArtifactControllerTest {
         createArtifact("", "# Invalid Request")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.message").value("Request validation failed"));
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.fields.title").exists());
     }
 
     @Test
@@ -81,7 +83,46 @@ class ArtifactControllerTest {
         mockMvc.perform(get("/api/artifacts/{id}", 999999))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("ARTIFACT_NOT_FOUND"))
-                .andExpect(jsonPath("$.message").value("Artifact not found: 999999"));
+                .andExpect(jsonPath("$.message").value("Artifact not found: 999999"))
+                .andExpect(jsonPath("$.fields").doesNotExist());
+    }
+
+    @Test
+    void rejectMalformedJson() throws Exception {
+        mockMvc.perform(post("/api/artifacts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"))
+                .andExpect(jsonPath("$.message").value("Request body is missing or malformed"));
+    }
+
+    @Test
+    void rejectInvalidPathVariableType() throws Exception {
+        mockMvc.perform(get("/api/artifacts/{id}", "abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_PATH_VARIABLE"))
+                .andExpect(jsonPath("$.message").value("Path variable has invalid type"));
+    }
+
+    @Test
+    void rejectUnsupportedMethod() throws Exception {
+        mockMvc.perform(patch("/api/artifacts/{id}", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"))
+                .andExpect(jsonPath("$.message").value("HTTP method is not supported"));
+    }
+
+    @Test
+    void rejectUnsupportedContentType() throws Exception {
+        mockMvc.perform(post("/api/artifacts")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .content("title=Plain Text"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"))
+                .andExpect(jsonPath("$.message").value("Content type is not supported"));
     }
 
     @Test

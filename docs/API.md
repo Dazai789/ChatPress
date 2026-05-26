@@ -84,7 +84,10 @@ Markdown：
 ```json
 {
   "code": "VALIDATION_FAILED",
-  "message": "Request validation failed"
+  "message": "Request validation failed",
+  "fields": {
+    "title": "must not be blank"
+  }
 }
 ```
 
@@ -309,12 +312,29 @@ JSON API 错误统一返回：
 }
 ```
 
+参数校验失败时会额外返回字段错误：
+
+```json
+{
+  "code": "VALIDATION_FAILED",
+  "message": "Request validation failed",
+  "fields": {
+    "title": "must not be blank",
+    "sourceContent": "must not be blank"
+  }
+}
+```
+
 当前错误码：
 
 | code | HTTP 状态 | 场景 |
 |---|---:|---|
 | `VALIDATION_FAILED` | 400 | 请求参数不合法。 |
+| `INVALID_REQUEST_BODY` | 400 | 请求体缺失或 JSON 格式错误。 |
+| `INVALID_PATH_VARIABLE` | 400 | 路径参数类型不合法。 |
 | `ARTIFACT_NOT_FOUND` | 404 | artifact 不存在。 |
+| `METHOD_NOT_ALLOWED` | 405 | HTTP 方法不支持。 |
+| `UNSUPPORTED_MEDIA_TYPE` | 415 | Content-Type 不支持。 |
 
 公开页面接口是 HTML 页面入口，404 时不返回 JSON 错误体。
 
