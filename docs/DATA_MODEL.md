@@ -30,7 +30,6 @@ artifact
 - Markdown 渲染后的 HTML。
 - 公开访问所需的 slug。
 - 草稿 / 发布状态。
-- 内容来源类型。
 
 ## 3. 字段
 
@@ -40,7 +39,6 @@ artifact
 | `title` | `String` | VARCHAR(200) | 是 | 页面标题。 |
 | `slug` | `String` | VARCHAR(200) | 是 | 公开 URL 标识，唯一。 |
 | `sourceFormat` | `String` | VARCHAR(50) | 是 | 内容格式，目前固定为 `markdown`。 |
-| `sourceType` | `Artifact.SourceType` | VARCHAR(50) | 是 | 内容来源。V1 主要使用 `MARKDOWN`，`AI_CHAT` 保留为后续扩展。 |
 | `sourceContent` | `String` | CLOB / TEXT | 是 | 用户输入的原始内容。 |
 | `renderedHtml` | `String` | CLOB / TEXT | 是 | 渲染后的 HTML。 |
 | `status` | `Artifact.Status` | VARCHAR(50) | 是 | 状态：`DRAFT` 或 `PUBLISHED`。 |
@@ -72,33 +70,6 @@ published
 - 后台详情和列表可以看到所有状态。
 - 公开页面 `/p/{slug}` 只允许访问 `PUBLISHED`。
 - `DRAFT` 内容即使 slug 正确，也返回 404。
-
-### `Artifact.SourceType`
-
-代码中：
-
-```java
-public enum SourceType {
-    MARKDOWN,
-    AI_CHAT
-}
-```
-
-API 返回：
-
-```text
-markdown
-ai_chat
-```
-
-含义：
-
-| 值 | 说明 |
-|---|---|
-| `markdown` | 普通 Markdown 笔记，V1 的主要内容来源。 |
-| `ai_chat` | 后续 AI 聊天记录导入预留值，当前不做解析。 |
-
-当前阶段只围绕 `markdown` 完善导入和 HTML 渲染。`ai_chat` 保留在模型中，但不是 V1 的开发重点。
 
 ## 5. 字段说明
 
@@ -132,18 +103,10 @@ ai_chat
 markdown
 ```
 
-它和 `sourceType` 不一样：
-
-```text
-sourceFormat = 内容是什么格式
-sourceType   = 内容从哪里来
-```
-
-V1 中通常是：
+V1 中固定为：
 
 ```text
 sourceFormat: markdown
-sourceType: markdown
 ```
 
 ### `sourceContent`
@@ -192,8 +155,6 @@ Controller receives HTTP requests.
 - `slug` 必须唯一。
 - `slug` 格式必须匹配 `[a-z0-9]+(-[a-z0-9]+)*`。
 - `sourceContent` 不能为空。
-- API 请求中不接收 `sourceType`。
-- V1 创建和更新时 `sourceType` 固定为 `markdown`。
 - `sourceFormat` 当前固定为 `markdown`。
 - 修改 `sourceContent` 时必须重新生成 `renderedHtml`。
 - 公开页面只展示 `published` 内容。
@@ -205,7 +166,6 @@ id: 1
 title: Spring Boot Notes
 slug: spring-boot-notes
 sourceFormat: markdown
-sourceType: markdown
 sourceContent: # Spring Boot Notes
 renderedHtml: <h1>Spring Boot Notes</h1>
 status: published
@@ -215,16 +175,23 @@ updatedAt: 2026-05-25T20:00:00
 
 ## 8. 当前数据库状态
 
-当前使用 H2 内存数据库。
+当前默认本地运行使用 H2 file 数据库。
 
 含义：
 
 ```text
-项目启动时创建数据库
-项目停止后数据消失
+默认数据保存在 ./data/chatpress
+项目重启后数据仍然保留
+测试使用 test profile 的 H2 内存数据库
 ```
 
-这适合当前学习和开发阶段。等功能稳定后，再迁移到 MySQL。
+项目同时预留了 `mysql` profile，后续可以通过环境变量切换到 MySQL：
+
+```text
+MYSQL_URL
+MYSQL_USERNAME
+MYSQL_PASSWORD
+```
 
 ## 9. 后续可能新增的数据结构
 

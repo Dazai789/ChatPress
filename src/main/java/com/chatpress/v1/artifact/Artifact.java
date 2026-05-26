@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -23,11 +23,6 @@ public class Artifact {
         PUBLISHED
     }
 
-    public enum SourceType {
-        MARKDOWN,
-        AI_CHAT
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -40,10 +35,6 @@ public class Artifact {
 
     @Column(nullable = false, length = 50)
     private String sourceFormat = "markdown";
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private SourceType sourceType = SourceType.MARKDOWN;
 
     @Lob
     @Column(nullable = false)
@@ -111,14 +102,6 @@ public class Artifact {
 
     public void setSourceFormat(String sourceFormat) {
         this.sourceFormat = sourceFormat;
-    }
-
-    public SourceType getSourceType() {
-        return sourceType;
-    }
-
-    public void setSourceType(SourceType sourceType) {
-        this.sourceType = sourceType;
     }
 
     public String getSourceContent() {

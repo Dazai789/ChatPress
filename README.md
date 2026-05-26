@@ -39,9 +39,18 @@ AI 聊天记录或网页 HTML
 - 公开页面标题 HTML 转义。
 - 草稿 / 发布状态控制。
 - 公开页面只展示 `published` 内容。
-- `sourceType` 来源类型，目前 V1 主要使用 `markdown`。
 - 统一错误响应。
 - 基础接口测试。
+
+## 当前欠缺能力
+
+- 还没有 Markdown 文件上传 / 导入接口。
+- 还不能直接读取 MacDown 导出的 `.md` 文件。
+- 还没有后台管理页面，当前主要通过 API 操作。
+- 还没有登录、鉴权和用户隔离。
+- 公开 HTML 还没有做安全过滤。
+- 列表接口还没有分页、搜索和状态筛选。
+- 数据库迁移还没有使用 Flyway / Liquibase 管理。
 
 ## 当前接口
 
@@ -67,7 +76,6 @@ GET    /p/{slug}
 | `title` | 页面标题 |
 | `slug` | 后端自动生成的公开 URL 标识 |
 | `sourceFormat` | 内容格式，目前固定为 `markdown` |
-| `sourceType` | 内容来源，V1 主要使用 `markdown`，`ai_chat` 作为后续扩展 |
 | `sourceContent` | 用户输入的原始内容 |
 | `renderedHtml` | Markdown 渲染后的 HTML |
 | `status` | `draft` 或 `published` |
@@ -79,13 +87,19 @@ GET    /p/{slug}
 - Java 21
 - Spring Boot 3.5.14
 - Maven
-- H2
+- H2 / MySQL profile
 - Spring Data JPA
 - Bean Validation
 - CommonMark 及扩展
 - JUnit / MockMvc
 
-当前数据库是 H2 内存数据库。运行或测试时会临时创建，项目停止后数据会消失。等功能稳定后再切换 MySQL。
+默认本地启动使用 H2 file 数据库，数据保存在 `./data/chatpress`。测试使用 `test` profile 和 H2 内存数据库，避免污染本地数据。后续需要连接 MySQL 时，可以使用 `mysql` profile 并通过环境变量配置连接信息。
+
+```text
+MYSQL_URL=jdbc:mysql://localhost:3306/chatpress
+MYSQL_USERNAME=root
+MYSQL_PASSWORD=...
+```
 
 ## 项目结构
 
@@ -130,17 +144,18 @@ docs/
 
 ## 当前进度
 
-基础 Markdown 发布链路已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步应优先把 Markdown 页面发布体验做扎实。
+基础 Markdown 发布链路已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步应优先补齐 Markdown 文件导入。
 
 下一步建议做：
 
 ```text
-Markdown 发布体验打磨
+Markdown 文件导入
 ```
 
 优先方向：
 
 ```text
-优化公开页面 HTML 样式
-再考虑 Markdown 预览
+增加 .md 文件上传接口
+读取文件内容并复用现有 Artifact 创建逻辑
+补齐文件类型、大小和空内容校验
 ```

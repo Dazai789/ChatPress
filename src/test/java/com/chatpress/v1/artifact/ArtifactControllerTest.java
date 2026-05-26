@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 class ArtifactControllerTest {
 
     @Autowired
@@ -38,7 +40,7 @@ class ArtifactControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Java Notes"))
                 .andExpect(jsonPath("$.slug").value("java-notes"))
-                .andExpect(jsonPath("$.sourceType").value("markdown"))
+                .andExpect(jsonPath("$.sourceFormat").value("markdown"))
                 .andExpect(jsonPath("$.status").value("published"))
                 .andExpect(jsonPath("$.renderedHtml").value("<h1>Java Notes</h1>\n"));
     }
@@ -153,7 +155,7 @@ class ArtifactControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("Newer List Notes"))
                 .andExpect(jsonPath("$[0].slug").value("newer-list-notes"))
-                .andExpect(jsonPath("$[0].sourceType").value("markdown"))
+                .andExpect(jsonPath("$[0].sourceFormat").value("markdown"))
                 .andExpect(jsonPath("$[0].status").value("published"))
                 .andExpect(jsonPath("$[0].sourceContent").doesNotExist())
                 .andExpect(jsonPath("$[0].renderedHtml").doesNotExist());
@@ -174,7 +176,7 @@ class ArtifactControllerTest {
                 .andExpect(jsonPath("$.id").value(artifactId))
                 .andExpect(jsonPath("$.title").value("Updated Notes"))
                 .andExpect(jsonPath("$.slug").value("old-notes"))
-                .andExpect(jsonPath("$.sourceType").value("markdown"))
+                .andExpect(jsonPath("$.sourceFormat").value("markdown"))
                 .andExpect(jsonPath("$.status").value("published"))
                 .andExpect(jsonPath("$.renderedHtml").value("<h1>Updated Notes</h1>\n"));
     }

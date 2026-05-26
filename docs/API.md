@@ -51,7 +51,6 @@ Markdown：
 - `title` 必填。
 - `sourceContent` 必填。
 - `slug` 不由请求传入，后端根据 `title` 自动生成，并在重复时自动追加数字后缀。
-- `sourceType` 不由请求传入，V1 固定为 `markdown`。
 - `sourceFormat` 由后端固定为 `markdown`。
 - Markdown 支持标题、段落、列表、引用、代码块、链接、表格、任务列表、删除线和自动链接。
 - 创建后默认状态为 `published`。
@@ -64,7 +63,6 @@ Markdown：
   "title": "Spring Boot Notes",
   "slug": "spring-boot-notes",
   "sourceFormat": "markdown",
-  "sourceType": "markdown",
   "sourceContent": "# Spring Boot Notes\n\nController receives HTTP requests.",
   "renderedHtml": "<h1>Spring Boot Notes</h1>\n<p>Controller receives HTTP requests.</p>\n",
   "status": "published",
@@ -105,7 +103,7 @@ GET /api/artifacts
     "id": 1,
     "title": "Spring Boot Notes",
     "slug": "spring-boot-notes",
-    "sourceType": "markdown",
+    "sourceFormat": "markdown",
     "status": "published",
     "createdAt": "2026-05-25T20:00:00",
     "updatedAt": "2026-05-25T20:00:00"
@@ -134,7 +132,6 @@ GET /api/artifacts/{id}
   "title": "Spring Boot Notes",
   "slug": "spring-boot-notes",
   "sourceFormat": "markdown",
-  "sourceType": "markdown",
   "sourceContent": "# Spring Boot Notes\n\nController receives HTTP requests.",
   "renderedHtml": "<h1>Spring Boot Notes</h1>\n<p>Controller receives HTTP requests.</p>\n",
   "status": "published",
@@ -176,7 +173,6 @@ PUT /api/artifacts/{id}
 - 更新标题和 sourceContent。
 - 更新不会改变 `slug`。
 - 如果 `sourceContent` 变化，后端重新生成 `renderedHtml`。
-- `sourceType` 保持为 `markdown`。
 - 更新内容不会自动改变 `status`。
 
 ### 响应体
@@ -187,7 +183,6 @@ PUT /api/artifacts/{id}
   "title": "Updated Spring Boot Notes",
   "slug": "spring-boot-notes",
   "sourceFormat": "markdown",
-  "sourceType": "markdown",
   "sourceContent": "# Updated Spring Boot Notes\n\nService handles business logic.",
   "renderedHtml": "<h1>Updated Spring Boot Notes</h1>\n<p>Service handles business logic.</p>\n",
   "status": "published",
@@ -235,7 +230,6 @@ PUT /api/artifacts/{id}/status
   "title": "Spring Boot Notes",
   "slug": "spring-boot-notes",
   "sourceFormat": "markdown",
-  "sourceType": "markdown",
   "sourceContent": "# Spring Boot Notes",
   "renderedHtml": "<h1>Spring Boot Notes</h1>\n",
   "status": "draft",

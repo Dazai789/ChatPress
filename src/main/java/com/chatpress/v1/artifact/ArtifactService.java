@@ -23,7 +23,6 @@ public class ArtifactService {
         String finalSlug = generateSlug(title);
 
         Artifact artifact = new Artifact(title, finalSlug, sourceContent, markdownRenderer.render(sourceContent));
-        artifact.setSourceType(Artifact.SourceType.MARKDOWN);
         artifact.setStatus(Artifact.Status.PUBLISHED);
         return artifactRepository.save(artifact);
     }
@@ -48,7 +47,6 @@ public class ArtifactService {
     public Artifact updateArtifactOrThrow(Long id, String title, String sourceContent) {
         Artifact artifact = getArtifactOrThrow(id);
         artifact.setTitle(title);
-        artifact.setSourceType(Artifact.SourceType.MARKDOWN);
         artifact.setSourceContent(sourceContent);
         artifact.setRenderedHtml(markdownRenderer.render(sourceContent));
         return artifactRepository.save(artifact);
