@@ -361,6 +361,35 @@ class ArtifactControllerTest {
     }
 
     @Test
+    void getAdminArtifactListPage() throws Exception {
+        createArtifact("Admin Published Notes", "# Admin Published Notes")
+                .andExpect(status().isCreated());
+        MvcResult draftResult = createArtifact("Admin Draft Notes", "# Admin Draft Notes")
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Integer draftArtifactId = artifactIdFrom(draftResult);
+
+        mockMvc.perform(put("/api/artifacts/{id}/status", draftArtifactId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(statusJson("draft")))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/admin/artifacts")
+                        .param("q", "Admin")
+                        .param("status", "draft"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Artifacts - Admin</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Admin Draft Notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Admin\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"draft\" selected")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Admin Published Notes")
+                )));
+    }
+
+    @Test
     void publicPageSupportsCommonMarkdownContent() throws Exception {
         String markdown = """
                 # Markdown Guide

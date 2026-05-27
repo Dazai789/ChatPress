@@ -42,6 +42,7 @@ AI 聊天记录或网页 HTML
 - 草稿 / 发布状态控制。
 - 公开页面只展示 `published` 内容。
 - 列表分页、标题搜索和状态筛选。
+- 后台 artifact 列表页面。
 - 统一错误响应。
 - 基础接口测试。
 
@@ -62,6 +63,7 @@ PUT    /api/artifacts/{id}
 PUT    /api/artifacts/{id}/status
 DELETE /api/artifacts/{id}
 GET    /p/{slug}
+GET    /admin/artifacts
 ```
 
 ## 核心数据对象
@@ -107,6 +109,8 @@ MYSQL_PASSWORD=...
 src/main/java/com/chatpress/v1/
   ChatpressV1Application.java
   artifact/
+    AdminArtifactController.java
+    AdminArtifactPageRenderer.java
     Artifact.java
     ArtifactController.java
     ArtifactRepository.java
@@ -148,18 +152,18 @@ docs/
 
 ## 当前进度
 
-基础 Markdown 发布链路、Markdown 文件导入、公开 HTML 安全过滤和列表查询能力已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步可以开始补后台管理体验或数据库迁移能力。
+基础 Markdown 发布链路、Markdown 文件导入、公开 HTML 安全过滤、列表查询能力和后台列表页已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步可以继续补后台详情和编辑体验，或开始数据库迁移能力。
 
 下一步建议做：
 
 ```text
-后台管理页面雏形
+后台 artifact 详情页
 ```
 
 优先方向：
 
 ```text
-用现有 API 做 artifact 列表页
-支持查看、搜索、状态筛选
-支持打开公开页面
+查看单个 artifact 的完整内容
+支持从列表进入详情
+支持修改 draft / published 状态
 ```

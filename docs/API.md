@@ -30,6 +30,12 @@
 /p/{slug}
 ```
 
+后台页面：
+
+```text
+/admin/artifacts
+```
+
 ## 3. 创建 Artifact
 
 ```text
@@ -384,7 +390,44 @@ GET /p/spring-boot-notes
 text/html
 ```
 
-## 11. 当前错误响应格式
+## 11. 后台 Artifact 列表页
+
+```text
+GET /admin/artifacts
+```
+
+### 查询参数
+
+与 `GET /api/artifacts` 一致：
+
+| 参数 | 必填 | 默认值 | 说明 |
+|---|---:|---:|---|
+| `page` | 否 | `0` | 页码，从 0 开始。 |
+| `size` | 否 | `10` | 每页数量，范围 1 到 100。 |
+| `q` | 否 | 无 | 按标题模糊搜索。 |
+| `status` | 否 | 无 | 按状态筛选，只支持 `draft` 或 `published`。 |
+
+### 说明
+
+- 返回 HTML 页面。
+- 复用 Artifact 列表查询能力。
+- 支持标题搜索、状态筛选和分页。
+- published 内容提供公开页链接。
+- draft 内容不提供公开页链接。
+
+### 示例
+
+```text
+GET /admin/artifacts?q=spring&status=published
+```
+
+响应类型：
+
+```text
+text/html
+```
+
+## 12. 当前错误响应格式
 
 JSON API 错误统一返回：
 
@@ -423,7 +466,7 @@ JSON API 错误统一返回：
 
 公开页面接口是 HTML 页面入口，404 时不返回 JSON 错误体。
 
-## 12. 暂不实现的 API
+## 13. 暂不实现的 API
 
 当前不做：
 
