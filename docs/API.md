@@ -35,6 +35,7 @@
 ```text
 /admin/artifacts
 /admin/artifacts/new
+/admin/artifacts/{id}
 ```
 
 ## 3. 创建 Artifact
@@ -396,6 +397,7 @@ text/html
 ```text
 GET /admin/artifacts
 GET /admin/artifacts/new
+GET /admin/artifacts/{id}
 POST /admin/artifacts
 ```
 
@@ -418,6 +420,7 @@ POST /admin/artifacts
 - published 内容提供公开页链接。
 - draft 内容不提供公开页链接。
 - 提供进入新建页面的入口。
+- title 可进入后台详情页。
 
 ### 示例
 
@@ -470,6 +473,29 @@ Location: /admin/artifacts
 ```
 
 标题或 Markdown 为空时返回 `400 Bad Request`，并重新渲染表单页面。
+
+### 详情页面
+
+```text
+GET /admin/artifacts/{id}
+```
+
+返回 HTML 详情页面，包含：
+
+- 标题。
+- 状态。
+- slug。
+- 公开页入口。
+- 创建时间。
+- 更新时间。
+- 原始 Markdown。
+- 渲染后的 HTML 预览。
+
+响应类型：
+
+```text
+text/html
+```
 
 ## 12. 当前错误响应格式
 

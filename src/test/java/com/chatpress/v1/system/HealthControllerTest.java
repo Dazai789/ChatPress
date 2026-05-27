@@ -9,6 +9,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -18,6 +19,13 @@ class HealthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    void homeRedirectsToAdminArtifacts() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isFound())
+                .andExpect(redirectedUrl("/admin/artifacts"));
+    }
 
     @Test
     void health() throws Exception {

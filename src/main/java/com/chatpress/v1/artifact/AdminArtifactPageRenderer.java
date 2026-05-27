@@ -275,6 +275,10 @@ public class AdminArtifactPageRenderer {
 
     private String renderRow(Artifact artifact) {
         String status = artifact.getStatus().name().toLowerCase(Locale.ROOT);
+        String titleLink = "<a href=\"/admin/artifacts/%d\">%s</a>".formatted(
+                artifact.getId(),
+                escapeHtml(artifact.getTitle())
+        );
         String publicLink = artifact.getStatus() == Artifact.Status.PUBLISHED
                 ? "<a href=\"/p/%s\">Open</a>".formatted(escapeHtml(artifact.getSlug()))
                 : "<span class=\"muted\">Draft</span>";
@@ -288,7 +292,7 @@ public class AdminArtifactPageRenderer {
                     <td>%s</td>
                 </tr>
                 """.formatted(
-                escapeHtml(artifact.getTitle()),
+                titleLink,
                 escapeHtml(status),
                 escapeHtml(status),
                 escapeHtml(artifact.getSlug()),

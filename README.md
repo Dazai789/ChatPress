@@ -44,12 +44,13 @@ AI 聊天记录或网页 HTML
 - 列表分页、标题搜索和状态筛选。
 - 后台 artifact 列表页面。
 - 后台 artifact 新建页面。
+- 后台 artifact 详情页面。
 - 统一错误响应。
 - 基础接口测试。
 
 ## 当前欠缺能力
 
-- 后台管理页面暂时没有详情和编辑页面。
+- 后台管理页面暂时没有编辑页面。
 - 还没有登录、鉴权和用户隔离。
 - 数据库迁移还没有使用 Flyway / Liquibase 管理。
 
@@ -66,6 +67,7 @@ DELETE /api/artifacts/{id}
 GET    /p/{slug}
 GET    /admin/artifacts
 GET    /admin/artifacts/new
+GET    /admin/artifacts/{id}
 POST   /admin/artifacts
 ```
 
@@ -113,6 +115,7 @@ src/main/java/com/chatpress/v1/
   ChatpressV1Application.java
   artifact/
     AdminArtifactController.java
+    AdminArtifactDetailRenderer.java
     AdminArtifactFormRenderer.java
     AdminArtifactPageRenderer.java
     Artifact.java
@@ -156,18 +159,18 @@ docs/
 
 ## 当前进度
 
-基础 Markdown 发布链路、Markdown 文件导入、公开 HTML 安全过滤、列表查询能力、后台列表页和后台新建页已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步可以继续补后台详情和编辑体验，或开始数据库迁移能力。
+基础 Markdown 发布链路、Markdown 文件导入、公开 HTML 安全过滤、列表查询能力、后台列表页、后台新建页和后台详情页已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步可以继续补后台编辑体验，或开始数据库迁移能力。
 
 下一步建议做：
 
 ```text
-后台 artifact 详情页
+后台 artifact 编辑页
 ```
 
 优先方向：
 
 ```text
-查看单个 artifact 的完整内容
-支持从列表进入详情
+从详情页进入编辑
+支持修改标题和 Markdown
 支持修改 draft / published 状态
 ```

@@ -383,6 +383,7 @@ class ArtifactControllerTest {
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Artifacts - Admin</title>")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Admin Draft Notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/admin/artifacts/" + draftArtifactId)))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Admin\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"draft\" selected")))
                 .andExpect(content().string(org.hamcrest.Matchers.not(
@@ -426,6 +427,26 @@ class ArtifactControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Title and Markdown are required")));
+    }
+
+    @Test
+    void getAdminArtifactDetailPage() throws Exception {
+        MvcResult result = createArtifact("Detail Notes", "# Detail Notes\n\nBody text.")
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Integer artifactId = artifactIdFrom(result);
+
+        mockMvc.perform(get("/admin/artifacts/{id}", artifactId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Detail Notes - Admin</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<h1>Detail Notes</h1>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<code>detail-notes</code>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("# Detail Notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<h1>Detail Notes</h1>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/p/detail-notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Back to list")));
     }
 
     @Test
