@@ -64,6 +64,24 @@ public class AdminArtifactPageRenderer {
                             letter-spacing: 0;
                         }
 
+                        .topbar {
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            gap: 16px;
+                        }
+
+                        .button-link {
+                            display: inline-flex;
+                            align-items: center;
+                            height: 36px;
+                            padding: 0 12px;
+                            border-radius: 6px;
+                            background: #0f766e;
+                            color: #ffffff;
+                            text-decoration: none;
+                        }
+
                         form {
                             display: grid;
                             grid-template-columns: minmax(180px, 1fr) 180px auto;
@@ -126,6 +144,11 @@ public class AdminArtifactPageRenderer {
                             color: #0f766e;
                             text-decoration-thickness: 1px;
                             text-underline-offset: 3px;
+                        }
+
+                        a.button-link {
+                            color: #ffffff;
+                            text-decoration: none;
                         }
 
                         .status {
@@ -197,8 +220,9 @@ public class AdminArtifactPageRenderer {
                 </head>
                 <body>
                     <header>
-                        <div class="shell">
+                        <div class="shell topbar">
                             <h1>Artifacts</h1>
+                            <a class="button-link" href="/admin/artifacts/new">New</a>
                         </div>
                     </header>
                     <main class="shell">

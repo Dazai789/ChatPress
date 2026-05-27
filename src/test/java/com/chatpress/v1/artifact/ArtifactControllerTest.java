@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -387,6 +388,44 @@ class ArtifactControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.not(
                         org.hamcrest.Matchers.containsString("Admin Published Notes")
                 )));
+    }
+
+    @Test
+    void getNewAdminArtifactForm() throws Exception {
+        mockMvc.perform(get("/admin/artifacts/new"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>New Artifact - Admin</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"title\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"sourceContent\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Back to list")));
+    }
+
+    @Test
+    void createArtifactFromAdminForm() throws Exception {
+        mockMvc.perform(post("/admin/artifacts")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("title", "Admin Form Notes")
+                        .param("sourceContent", "# Admin Form Notes"))
+                .andExpect(status().isSeeOther())
+                .andExpect(redirectedUrl("/admin/artifacts"));
+
+        mockMvc.perform(get("/admin/artifacts")
+                        .param("q", "Admin Form Notes"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Admin Form Notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("admin-form-notes")));
+    }
+
+    @Test
+    void rejectBlankAdminArtifactForm() throws Exception {
+        mockMvc.perform(post("/admin/artifacts")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("title", "")
+                        .param("sourceContent", ""))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Title and Markdown are required")));
     }
 
     @Test

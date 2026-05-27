@@ -34,6 +34,7 @@
 
 ```text
 /admin/artifacts
+/admin/artifacts/new
 ```
 
 ## 3. 创建 Artifact
@@ -394,6 +395,8 @@ text/html
 
 ```text
 GET /admin/artifacts
+GET /admin/artifacts/new
+POST /admin/artifacts
 ```
 
 ### 查询参数
@@ -414,6 +417,7 @@ GET /admin/artifacts
 - 支持标题搜索、状态筛选和分页。
 - published 内容提供公开页链接。
 - draft 内容不提供公开页链接。
+- 提供进入新建页面的入口。
 
 ### 示例
 
@@ -426,6 +430,46 @@ GET /admin/artifacts?q=spring&status=published
 ```text
 text/html
 ```
+
+### 新建页面
+
+```text
+GET /admin/artifacts/new
+```
+
+返回 HTML 表单页面，包含：
+
+- `title`
+- `sourceContent`
+
+响应类型：
+
+```text
+text/html
+```
+
+### 提交新建表单
+
+```text
+POST /admin/artifacts
+Content-Type: application/x-www-form-urlencoded
+```
+
+表单字段：
+
+| 字段 | 必填 | 说明 |
+|---|---:|---|
+| `title` | 是 | 页面标题。 |
+| `sourceContent` | 是 | Markdown 原文。 |
+
+成功后返回：
+
+```text
+303 See Other
+Location: /admin/artifacts
+```
+
+标题或 Markdown 为空时返回 `400 Bad Request`，并重新渲染表单页面。
 
 ## 12. 当前错误响应格式
 
