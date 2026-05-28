@@ -47,6 +47,8 @@ AI 聊天记录或网页 HTML
 - 后台 artifact 新建页面。
 - 后台 artifact 详情页面。
 - 后台 artifact 编辑页面。
+- 后台 artifact 删除确认页面。
+- 后台 Markdown 文件导入页面。
 - 统一错误响应。
 - 基础接口测试。
 
@@ -67,10 +69,14 @@ DELETE /api/artifacts/{id}
 GET    /p/{slug}
 GET    /admin/artifacts
 GET    /admin/artifacts/new
+GET    /admin/artifacts/import/markdown
 GET    /admin/artifacts/{id}
 GET    /admin/artifacts/{id}/edit
+GET    /admin/artifacts/{id}/delete
 POST   /admin/artifacts
+POST   /admin/artifacts/import/markdown
 POST   /admin/artifacts/{id}
+POST   /admin/artifacts/{id}/delete
 ```
 
 ## 核心数据对象
@@ -164,18 +170,18 @@ src/main/resources/db/migration/
 
 ## 当前进度
 
-基础 Markdown 发布链路、Markdown 文件导入、公开 HTML 安全过滤、列表查询能力、后台列表页、后台新建页、后台详情页、后台编辑页和数据库迁移管理已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步可以继续补后台 Markdown 文件导入页面，或开始登录鉴权。
+基础 Markdown 发布链路、Markdown 文件导入、公开 HTML 安全过滤、列表查询能力、后台列表页、后台新建页、后台详情页、后台编辑页、后台删除确认、后台 Markdown 导入页和数据库迁移管理已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步可以开始登录鉴权。
 
 下一步建议做：
 
 ```text
-后台 Markdown 文件导入页面
+登录鉴权
 ```
 
 优先方向：
 
 ```text
-从后台页面上传 .md 文件
-复用现有 Markdown 导入接口能力
-导入成功后跳转到 artifact 详情页
+引入 Spring Security
+保护 /admin/** 后台页面
+先做一个本地配置账号
 ```

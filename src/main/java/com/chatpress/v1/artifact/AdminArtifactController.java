@@ -1,5 +1,6 @@
 package com.chatpress.v1.artifact;
 
+import com.chatpress.v1.artifact.exception.InvalidMarkdownImportException;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.Locale;
@@ -20,17 +22,23 @@ public class AdminArtifactController {
     private final AdminArtifactPageRenderer adminArtifactPageRenderer;
     private final AdminArtifactFormRenderer adminArtifactFormRenderer;
     private final AdminArtifactDetailRenderer adminArtifactDetailRenderer;
+    private final AdminArtifactDeleteRenderer adminArtifactDeleteRenderer;
+    private final AdminMarkdownImportRenderer adminMarkdownImportRenderer;
 
     public AdminArtifactController(
             ArtifactService artifactService,
             AdminArtifactPageRenderer adminArtifactPageRenderer,
             AdminArtifactFormRenderer adminArtifactFormRenderer,
-            AdminArtifactDetailRenderer adminArtifactDetailRenderer
+            AdminArtifactDetailRenderer adminArtifactDetailRenderer,
+            AdminArtifactDeleteRenderer adminArtifactDeleteRenderer,
+            AdminMarkdownImportRenderer adminMarkdownImportRenderer
     ) {
         this.artifactService = artifactService;
         this.adminArtifactPageRenderer = adminArtifactPageRenderer;
         this.adminArtifactFormRenderer = adminArtifactFormRenderer;
         this.adminArtifactDetailRenderer = adminArtifactDetailRenderer;
+        this.adminArtifactDeleteRenderer = adminArtifactDeleteRenderer;
+        this.adminMarkdownImportRenderer = adminMarkdownImportRenderer;
     }
 
     @GetMapping(value = "/admin/artifacts", produces = MediaType.TEXT_HTML_VALUE)
@@ -49,6 +57,11 @@ public class AdminArtifactController {
         return adminArtifactFormRenderer.render("", "", null);
     }
 
+    @GetMapping(value = "/admin/artifacts/import/markdown", produces = MediaType.TEXT_HTML_VALUE)
+    public String importMarkdownForm() {
+        return adminMarkdownImportRenderer.render("", null);
+    }
+
     @GetMapping(value = "/admin/artifacts/{id}", produces = MediaType.TEXT_HTML_VALUE)
     public String getArtifact(@PathVariable Long id) {
         Artifact artifact = artifactService.getArtifactOrThrow(id);
@@ -59,6 +72,12 @@ public class AdminArtifactController {
     public String editArtifactForm(@PathVariable Long id) {
         Artifact artifact = artifactService.getArtifactOrThrow(id);
         return adminArtifactFormRenderer.renderEdit(artifact, null);
+    }
+
+    @GetMapping(value = "/admin/artifacts/{id}/delete", produces = MediaType.TEXT_HTML_VALUE)
+    public String deleteArtifactForm(@PathVariable Long id) {
+        Artifact artifact = artifactService.getArtifactOrThrow(id);
+        return adminArtifactDeleteRenderer.render(artifact);
     }
 
     @PostMapping(
@@ -83,6 +102,26 @@ public class AdminArtifactController {
         return ResponseEntity.status(303)
                 .header(HttpHeaders.LOCATION, URI.create("/admin/artifacts").toString())
                 .build();
+    }
+
+    @PostMapping(
+            value = "/admin/artifacts/import/markdown",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.TEXT_HTML_VALUE
+    )
+    public ResponseEntity<String> importMarkdown(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "title", required = false) String title
+    ) {
+        try {
+            Artifact artifact = artifactService.importMarkdownFile(file, title);
+            return ResponseEntity.status(303)
+                    .header(HttpHeaders.LOCATION, URI.create("/admin/artifacts/" + artifact.getId()).toString())
+                    .build();
+        } catch (InvalidMarkdownImportException exception) {
+            return ResponseEntity.badRequest()
+                    .body(adminMarkdownImportRenderer.render(title, exception.getMessage()));
+        }
     }
 
     @PostMapping(
@@ -123,6 +162,17 @@ public class AdminArtifactController {
         artifactService.updateArtifactStatusOrThrow(id, artifactStatus);
         return ResponseEntity.status(303)
                 .header(HttpHeaders.LOCATION, URI.create("/admin/artifacts/" + id).toString())
+                .build();
+    }
+
+    @PostMapping(
+            value = "/admin/artifacts/{id}/delete",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE
+    )
+    public ResponseEntity<Void> deleteArtifact(@PathVariable Long id) {
+        artifactService.deleteArtifactOrThrow(id);
+        return ResponseEntity.status(303)
+                .header(HttpHeaders.LOCATION, URI.create("/admin/artifacts").toString())
                 .build();
     }
 

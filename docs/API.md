@@ -35,6 +35,7 @@
 ```text
 /admin/artifacts
 /admin/artifacts/new
+/admin/artifacts/import/markdown
 /admin/artifacts/{id}
 /admin/artifacts/{id}/edit
 ```
@@ -398,10 +399,14 @@ text/html
 ```text
 GET /admin/artifacts
 GET /admin/artifacts/new
+GET /admin/artifacts/import/markdown
 GET /admin/artifacts/{id}
 GET /admin/artifacts/{id}/edit
+GET /admin/artifacts/{id}/delete
 POST /admin/artifacts
+POST /admin/artifacts/import/markdown
 POST /admin/artifacts/{id}
+POST /admin/artifacts/{id}/delete
 ```
 
 ### 查询参数
@@ -423,6 +428,7 @@ POST /admin/artifacts/{id}
 - published 内容提供公开页链接。
 - draft 内容不提供公开页链接。
 - 提供进入新建页面的入口。
+- 提供进入 Markdown 文件导入页面的入口。
 - title 可进入后台详情页。
 
 ### 示例
@@ -477,6 +483,53 @@ Location: /admin/artifacts
 
 标题或 Markdown 为空时返回 `400 Bad Request`，并重新渲染表单页面。
 
+### Markdown 导入页面
+
+```text
+GET /admin/artifacts/import/markdown
+```
+
+返回 HTML 导入表单页面，包含：
+
+- `file`
+- `title`
+
+响应类型：
+
+```text
+text/html
+```
+
+### 提交 Markdown 导入表单
+
+```text
+POST /admin/artifacts/import/markdown
+Content-Type: multipart/form-data
+```
+
+表单字段：
+
+| 字段 | 必填 | 说明 |
+|---|---:|---|
+| `file` | 是 | `.md` 文件，UTF-8 文本，最大 2MB。 |
+| `title` | 否 | 页面标题。不填时使用文件名。 |
+
+说明：
+
+- 复用 JSON API 的 Markdown 导入能力。
+- 导入后自动生成 slug。
+- 导入后自动生成 `renderedHtml`。
+- 创建后默认状态为 `published`。
+
+成功后返回：
+
+```text
+303 See Other
+Location: /admin/artifacts/{id}
+```
+
+文件不合法时返回 `400 Bad Request`，并重新渲染导入表单页面。
+
 ### 详情页面
 
 ```text
@@ -494,6 +547,7 @@ GET /admin/artifacts/{id}
 - 原始 Markdown。
 - 渲染后的 HTML 预览。
 - 编辑入口。
+- 删除入口。
 
 响应类型：
 
@@ -557,6 +611,46 @@ Location: /admin/artifacts/{id}
 ```text
 text/html
 ```
+
+### 删除确认页面
+
+```text
+GET /admin/artifacts/{id}/delete
+```
+
+返回 HTML 删除确认页面，包含：
+
+- 标题。
+- 状态。
+- slug。
+- 删除确认表单。
+
+响应类型：
+
+```text
+text/html
+```
+
+### 提交删除确认表单
+
+```text
+POST /admin/artifacts/{id}/delete
+Content-Type: application/x-www-form-urlencoded
+```
+
+说明：
+
+- 删除指定 artifact。
+- 删除成功后跳转回后台列表页。
+
+成功后返回：
+
+```text
+303 See Other
+Location: /admin/artifacts
+```
+
+artifact 不存在时返回 `404 Not Found`。
 
 ## 12. 当前错误响应格式
 

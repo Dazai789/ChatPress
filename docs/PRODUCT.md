@@ -60,6 +60,8 @@ chatpress-v1 的定位是：
 - 后台 artifact 新建页。
 - 后台 artifact 详情页。
 - 后台 artifact 编辑页。
+- 后台 artifact 删除确认页。
+- 后台 Markdown 文件导入页。
 - 查看 artifact 详情。
 - Markdown 文件上传 / 导入。
 - Markdown 渲染为 HTML。
@@ -151,16 +153,16 @@ chatpress-v1 的定位是：
 下一阶段建议实现：
 
 ```text
-后台 Markdown 文件导入页面
+登录鉴权
 ```
 
 优先级：
 
 ```text
-1. 从后台页面上传 `.md` 文件。
-2. 复用现有 Markdown 导入能力。
-3. 导入成功后跳转到 artifact 详情页。
-4. 在后台表单里展示导入错误。
+1. 引入 Spring Security。
+2. 保护 `/admin/**` 后台页面。
+3. 先做一个本地配置账号。
+4. 保持公开页面 `/p/{slug}` 不需要登录。
 ```
 
 AI 聊天记录导入、网页 HTML 导入、浏览器扩展放到后续版本：

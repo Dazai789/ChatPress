@@ -386,6 +386,7 @@ class ArtifactControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("/admin/artifacts/" + draftArtifactId)))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Admin\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"draft\" selected")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/admin/artifacts/import/markdown")))
                 .andExpect(content().string(org.hamcrest.Matchers.not(
                         org.hamcrest.Matchers.containsString("Admin Published Notes")
                 )));
@@ -430,6 +431,56 @@ class ArtifactControllerTest {
     }
 
     @Test
+    void getAdminMarkdownImportForm() throws Exception {
+        mockMvc.perform(get("/admin/artifacts/import/markdown"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Import Markdown - Admin</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("enctype=\"multipart/form-data\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"file\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"title\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Back to list")));
+    }
+
+    @Test
+    void importMarkdownFromAdminForm() throws Exception {
+        MockMultipartFile file = markdownFile("Admin Imported.md", "# Admin Imported Notes");
+
+        MvcResult result = mockMvc.perform(multipart("/admin/artifacts/import/markdown")
+                        .file(file)
+                        .param("title", "Admin Imported Notes"))
+                .andExpect(status().isSeeOther())
+                .andReturn();
+
+        String location = result.getResponse().getHeader("Location");
+        org.assertj.core.api.Assertions.assertThat(location).startsWith("/admin/artifacts/");
+
+        mockMvc.perform(get(location))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Admin Imported Notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("admin-imported-notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("# Admin Imported Notes")));
+    }
+
+    @Test
+    void rejectInvalidAdminMarkdownImportForm() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "notes.txt",
+                MediaType.TEXT_PLAIN_VALUE,
+                "# Notes".getBytes(StandardCharsets.UTF_8)
+        );
+
+        mockMvc.perform(multipart("/admin/artifacts/import/markdown")
+                        .file(file)
+                        .param("title", "Bad Import"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Only .md files are supported")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Bad Import\"")));
+    }
+
+    @Test
     void getAdminArtifactDetailPage() throws Exception {
         MvcResult result = createArtifact("Detail Notes", "# Detail Notes\n\nBody text.")
                 .andExpect(status().isCreated())
@@ -447,7 +498,46 @@ class ArtifactControllerTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<h1>Detail Notes</h1>")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("/p/detail-notes")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("/admin/artifacts/" + artifactId + "/edit")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/admin/artifacts/" + artifactId + "/delete")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Back to list")));
+    }
+
+    @Test
+    void getDeleteAdminArtifactForm() throws Exception {
+        MvcResult result = createArtifact("Delete Admin Notes", "# Delete Admin Notes")
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Integer artifactId = artifactIdFrom(result);
+
+        mockMvc.perform(get("/admin/artifacts/{id}/delete", artifactId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Delete Delete Admin Notes - Admin</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<h1>Delete Artifact</h1>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("This action will permanently delete this artifact.")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Delete Admin Notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("delete-admin-notes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("action=\"/admin/artifacts/" + artifactId + "/delete\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Cancel")));
+    }
+
+    @Test
+    void deleteArtifactFromAdminForm() throws Exception {
+        MvcResult result = createArtifact("Admin Delete Notes", "# Admin Delete Notes")
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Integer artifactId = artifactIdFrom(result);
+
+        mockMvc.perform(post("/admin/artifacts/{id}/delete", artifactId)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isSeeOther())
+                .andExpect(redirectedUrl("/admin/artifacts"));
+
+        mockMvc.perform(get("/api/artifacts/{id}", artifactId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ARTIFACT_NOT_FOUND"));
     }
 
     @Test

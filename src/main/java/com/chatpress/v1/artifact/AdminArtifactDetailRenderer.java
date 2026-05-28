@@ -96,6 +96,18 @@ public class AdminArtifactDetailRenderer {
                             text-decoration: none;
                         }
 
+                        .danger-link {
+                            display: inline-flex;
+                            align-items: center;
+                            height: 34px;
+                            padding: 0 12px;
+                            border: 1px solid #fecaca;
+                            border-radius: 6px;
+                            background: #fff7f7;
+                            color: #b91c1c;
+                            text-decoration: none;
+                        }
+
                         .meta {
                             display: grid;
                             grid-template-columns: 150px 1fr;
@@ -192,6 +204,7 @@ public class AdminArtifactDetailRenderer {
                             <h1>%s</h1>
                             <div class="actions">
                                 <a class="secondary-link" href="/admin/artifacts/%d/edit">Edit</a>
+                                <a class="danger-link" href="/admin/artifacts/%d/delete">Delete</a>
                                 <a class="button-link" href="/admin/artifacts">Back to list</a>
                             </div>
                         </div>
@@ -221,6 +234,7 @@ public class AdminArtifactDetailRenderer {
                 """.formatted(
                 escapeHtml(artifact.getTitle()),
                 escapeHtml(artifact.getTitle()),
+                artifact.getId(),
                 artifact.getId(),
                 escapeHtml(status),
                 escapeHtml(status),

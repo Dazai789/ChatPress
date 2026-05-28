@@ -82,6 +82,23 @@ public class AdminArtifactPageRenderer {
                             text-decoration: none;
                         }
 
+                        .topbar-actions {
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                        }
+
+                        .secondary-link {
+                            display: inline-flex;
+                            align-items: center;
+                            height: 34px;
+                            padding: 0 12px;
+                            border: 1px solid #c9c6bd;
+                            border-radius: 6px;
+                            background: #ffffff;
+                            text-decoration: none;
+                        }
+
                         form {
                             display: grid;
                             grid-template-columns: minmax(180px, 1fr) 180px auto;
@@ -211,6 +228,15 @@ public class AdminArtifactPageRenderer {
                                 grid-template-columns: 1fr;
                             }
 
+                            .topbar {
+                                align-items: flex-start;
+                                flex-direction: column;
+                            }
+
+                            .topbar-actions {
+                                flex-wrap: wrap;
+                            }
+
                             table {
                                 display: block;
                                 overflow-x: auto;
@@ -222,7 +248,10 @@ public class AdminArtifactPageRenderer {
                     <header>
                         <div class="shell topbar">
                             <h1>Artifacts</h1>
-                            <a class="button-link" href="/admin/artifacts/new">New</a>
+                            <div class="topbar-actions">
+                                <a class="secondary-link" href="/admin/artifacts/import/markdown">Import</a>
+                                <a class="button-link" href="/admin/artifacts/new">New</a>
+                            </div>
                         </div>
                     </header>
                     <main class="shell">
