@@ -73,6 +73,7 @@ chatpress-v1 的定位是：
 - 默认 H2 file 数据库。
 - 测试 H2 内存数据库。
 - MySQL profile 预留配置。
+- Flyway 数据库迁移管理。
 - 草稿 / 发布状态控制。
 - 公开页面只展示 `published` 内容。
 - 基础测试覆盖。
@@ -105,7 +106,6 @@ chatpress-v1 的定位是：
 
 - 没有登录、鉴权和用户隔离。
 - slug 删除后是否复用还没有形成明确产品规则。
-- 数据库结构还没有使用 Flyway / Liquibase 管理迁移。
 
 ## 8. 当前用户流程
 
@@ -151,16 +151,16 @@ chatpress-v1 的定位是：
 下一阶段建议实现：
 
 ```text
-数据库迁移管理
+后台 Markdown 文件导入页面
 ```
 
 优先级：
 
 ```text
-1. 引入 Flyway / Liquibase。
-2. 固化 artifact 表结构。
-3. 关闭生产环境对 hibernate ddl-auto=update 的依赖。
-4. 为后续新增字段和表保留清晰迁移路径。
+1. 从后台页面上传 `.md` 文件。
+2. 复用现有 Markdown 导入能力。
+3. 导入成功后跳转到 artifact 详情页。
+4. 在后台表单里展示导入错误。
 ```
 
 AI 聊天记录导入、网页 HTML 导入、浏览器扩展放到后续版本：

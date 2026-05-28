@@ -29,6 +29,7 @@ AI 聊天记录或网页 HTML
 - Spring Boot 项目骨架。
 - Maven 依赖和测试流程。
 - H2 file 数据库和测试用 H2 内存数据库。
+- Flyway 数据库迁移管理。
 - Spring Data JPA 数据访问。
 - Artifact 创建、列表、详情、更新、删除。
 - Markdown 文件上传 / 导入。
@@ -52,7 +53,6 @@ AI 聊天记录或网页 HTML
 ## 当前欠缺能力
 
 - 还没有登录、鉴权和用户隔离。
-- 数据库迁移还没有使用 Flyway / Liquibase 管理。
 
 ## 当前接口
 
@@ -98,11 +98,12 @@ POST   /admin/artifacts/{id}
 - Maven
 - H2 / MySQL profile
 - Spring Data JPA
+- Flyway
 - Bean Validation
 - CommonMark 及扩展
 - JUnit / MockMvc
 
-默认本地启动使用 H2 file 数据库，数据保存在 `./data/chatpress`。测试使用 `test` profile 和 H2 内存数据库，避免污染本地数据。后续需要连接 MySQL 时，可以使用 `mysql` profile 并通过环境变量配置连接信息。
+默认本地启动使用 H2 file 数据库，数据保存在 `./data/chatpress`。数据库结构由 Flyway 迁移脚本管理，当前第一版迁移文件是 `src/main/resources/db/migration/V1__create_artifact_table.sql`。测试使用 `test` profile 和 H2 内存数据库，避免污染本地数据。后续需要连接 MySQL 时，可以使用 `mysql` profile 并通过环境变量配置连接信息。
 
 ```text
 MYSQL_URL=jdbc:mysql://localhost:3306/chatpress
@@ -151,6 +152,8 @@ docs/
   API.md
   DATA_MODEL.md
   PRODUCT.md
+src/main/resources/db/migration/
+  V1__create_artifact_table.sql
 ```
 
 ## 文档入口
@@ -161,18 +164,18 @@ docs/
 
 ## 当前进度
 
-基础 Markdown 发布链路、Markdown 文件导入、公开 HTML 安全过滤、列表查询能力、后台列表页、后台新建页、后台详情页和后台编辑页已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步可以继续补登录鉴权，或开始数据库迁移能力。
+基础 Markdown 发布链路、Markdown 文件导入、公开 HTML 安全过滤、列表查询能力、后台列表页、后台新建页、后台详情页、后台编辑页和数据库迁移管理已经完成。按 V1 Markdown Publisher 估算，当前后端基础能力已经比较完整，下一步可以继续补后台 Markdown 文件导入页面，或开始登录鉴权。
 
 下一步建议做：
 
 ```text
-数据库迁移管理
+后台 Markdown 文件导入页面
 ```
 
 优先方向：
 
 ```text
-引入 Flyway / Liquibase
-把 artifact 表结构固化为迁移脚本
-避免后续依赖 hibernate ddl-auto 自动改表
+从后台页面上传 .md 文件
+复用现有 Markdown 导入接口能力
+导入成功后跳转到 artifact 详情页
 ```

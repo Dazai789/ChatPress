@@ -187,6 +187,22 @@ updatedAt: 2026-05-25T20:00:00
 测试使用 test profile 的 H2 内存数据库
 ```
 
+数据库结构由 Flyway 迁移脚本管理。当前第一版迁移文件：
+
+```text
+src/main/resources/db/migration/V1__create_artifact_table.sql
+```
+
+启动顺序：
+
+```text
+Flyway 执行迁移脚本
+-> 创建或确认 artifact 表结构
+-> Hibernate 使用 ddl-auto=validate 校验 Entity 和表结构是否匹配
+```
+
+默认本地 H2 和 MySQL profile 都不再依赖 Hibernate 自动改表。
+
 项目同时预留了 `mysql` profile，后续可以通过环境变量切换到 MySQL：
 
 ```text
