@@ -7,11 +7,11 @@ import java.util.Locale;
 @Component
 public class AdminArtifactFormRenderer {
 
-    public String render(String title, String sourceContent, String errorMessage) {
-        return renderNew(title, sourceContent, errorMessage);
+    public String render(String title, String sourceContent, String errorMessage, String csrfToken) {
+        return renderNew(title, sourceContent, errorMessage, csrfToken);
     }
 
-    public String renderNew(String title, String sourceContent, String errorMessage) {
+    public String renderNew(String title, String sourceContent, String errorMessage, String csrfToken) {
         return renderForm(
                 "New Artifact",
                 "New Artifact - Admin",
@@ -21,21 +21,23 @@ public class AdminArtifactFormRenderer {
                 sourceContent,
                 "published",
                 false,
-                errorMessage
+                errorMessage,
+                csrfToken
         );
     }
 
-    public String renderEdit(Artifact artifact, String errorMessage) {
+    public String renderEdit(Artifact artifact, String errorMessage, String csrfToken) {
         return renderEdit(
                 artifact.getId(),
                 artifact.getTitle(),
                 artifact.getSourceContent(),
                 artifact.getStatus().name().toLowerCase(Locale.ROOT),
-                errorMessage
+                errorMessage,
+                csrfToken
         );
     }
 
-    public String renderEdit(Long artifactId, String title, String sourceContent, String status, String errorMessage) {
+    public String renderEdit(Long artifactId, String title, String sourceContent, String status, String errorMessage, String csrfToken) {
         return renderForm(
                 "Edit Artifact",
                 "Edit Artifact - Admin",
@@ -45,7 +47,8 @@ public class AdminArtifactFormRenderer {
                 sourceContent,
                 normalizeStatus(status),
                 true,
-                errorMessage
+                errorMessage,
+                csrfToken
         );
     }
 
@@ -58,7 +61,8 @@ public class AdminArtifactFormRenderer {
             String sourceContent,
             String status,
             boolean showStatus,
-            String errorMessage
+            String errorMessage,
+            String csrfToken
     ) {
         return """
                 <!doctype html>
@@ -189,6 +193,7 @@ public class AdminArtifactFormRenderer {
                     <main class="shell">
                         %s
                         <form method="post" action="%s">
+                            <input type="hidden" name="_csrf" value="%s">
                             <div class="field">
                                 <label for="title">Title</label>
                                 <input id="title" name="title" value="%s" maxlength="200" required>
@@ -211,6 +216,7 @@ public class AdminArtifactFormRenderer {
                 escapeHtml(pageHeading),
                 renderError(errorMessage),
                 escapeHtml(formAction),
+                escapeHtml(csrfToken),
                 escapeHtml(title),
                 escapeHtml(sourceContent),
                 renderStatusField(status, showStatus),

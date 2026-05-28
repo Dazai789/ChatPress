@@ -7,7 +7,7 @@ import java.util.Locale;
 @Component
 public class AdminArtifactDeleteRenderer {
 
-    public String render(Artifact artifact) {
+    public String render(Artifact artifact, String csrfToken) {
         String status = artifact.getStatus().name().toLowerCase(Locale.ROOT);
 
         return """
@@ -127,6 +127,7 @@ public class AdminArtifactDeleteRenderer {
                                 <dd><code>%s</code></dd>
                             </dl>
                             <form method="post" action="/admin/artifacts/%d/delete">
+                                <input type="hidden" name="_csrf" value="%s">
                                 <div class="actions">
                                     <button type="submit">Delete</button>
                                     <a href="/admin/artifacts/%d">Cancel</a>
@@ -142,6 +143,7 @@ public class AdminArtifactDeleteRenderer {
                 escapeHtml(status),
                 escapeHtml(artifact.getSlug()),
                 artifact.getId(),
+                escapeHtml(csrfToken),
                 artifact.getId()
         );
     }

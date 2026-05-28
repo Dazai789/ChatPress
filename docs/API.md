@@ -676,7 +676,7 @@ JSON API 错误统一返回：
 }
 ```
 
-当前错误码：
+当前已实现错误码：
 
 | code | HTTP 状态 | 场景 |
 |---|---:|---|
@@ -691,12 +691,31 @@ JSON API 错误统一返回：
 
 公开页面接口是 HTML 页面入口，404 时不返回 JSON 错误体。
 
-## 13. 暂不实现的 API
+后续可能新增错误码：
 
-当前不做：
+| code | HTTP 状态 | 场景 |
+|---|---:|---|
+| `UNAUTHORIZED` | 401 | 未登录、登录过期或 token 无效。 |
+| `FORBIDDEN` | 403 | 当前用户无权限访问该资源。 |
+| `RATE_LIMITED` | 429 | 登录、注册等接口触发限流。 |
 
-- 登录 / 注册。
-- 用户权限。
+## 13. 后续新增的 API
+
+以下 API 可以配合后续功能继续补充：
+
+### 认证与用户
+- `POST /api/auth/register` — 用户注册
+- `POST /api/auth/login` — 用户登录，返回 JWT
+- `POST /api/auth/refresh` — 刷新 JWT token
+- 现有所有 `/api/**` 接口增加 JWT 鉴权（请求头 `Authorization: Bearer <token>`）
+- 新增错误码：`UNAUTHORIZED`（401）、`FORBIDDEN`（403）
+
+### 文件与限流
+- `POST /api/artifacts/{id}/image` — 上传文章封面图
+- `GET /api/images/{path}` — 访问上传的图片
+- 接口限流触发时返回 429 + `RATE_LIMITED` 错误码
+
+### 仍暂不实现
 - 标签。
 - 自动读取 AI 平台聊天记录。
 - LLM 总结。

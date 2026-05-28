@@ -1,10 +1,12 @@
 package com.chatpress.v1.artifact;
 
 import com.chatpress.v1.artifact.exception.InvalidMarkdownImportException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,13 +55,13 @@ public class AdminArtifactController {
     }
 
     @GetMapping(value = "/admin/artifacts/new", produces = MediaType.TEXT_HTML_VALUE)
-    public String newArtifactForm() {
-        return adminArtifactFormRenderer.render("", "", null);
+    public String newArtifactForm(HttpServletRequest request) {
+        return adminArtifactFormRenderer.render("", "", null, csrfToken(request));
     }
 
     @GetMapping(value = "/admin/artifacts/import/markdown", produces = MediaType.TEXT_HTML_VALUE)
-    public String importMarkdownForm() {
-        return adminMarkdownImportRenderer.render("", null);
+    public String importMarkdownForm(HttpServletRequest request) {
+        return adminMarkdownImportRenderer.render("", null, csrfToken(request));
     }
 
     @GetMapping(value = "/admin/artifacts/{id}", produces = MediaType.TEXT_HTML_VALUE)
@@ -69,15 +71,15 @@ public class AdminArtifactController {
     }
 
     @GetMapping(value = "/admin/artifacts/{id}/edit", produces = MediaType.TEXT_HTML_VALUE)
-    public String editArtifactForm(@PathVariable Long id) {
+    public String editArtifactForm(@PathVariable Long id, HttpServletRequest request) {
         Artifact artifact = artifactService.getArtifactOrThrow(id);
-        return adminArtifactFormRenderer.renderEdit(artifact, null);
+        return adminArtifactFormRenderer.renderEdit(artifact, null, csrfToken(request));
     }
 
     @GetMapping(value = "/admin/artifacts/{id}/delete", produces = MediaType.TEXT_HTML_VALUE)
-    public String deleteArtifactForm(@PathVariable Long id) {
+    public String deleteArtifactForm(@PathVariable Long id, HttpServletRequest request) {
         Artifact artifact = artifactService.getArtifactOrThrow(id);
-        return adminArtifactDeleteRenderer.render(artifact);
+        return adminArtifactDeleteRenderer.render(artifact, csrfToken(request));
     }
 
     @PostMapping(
@@ -87,14 +89,16 @@ public class AdminArtifactController {
     )
     public ResponseEntity<String> createArtifact(
             @RequestParam String title,
-            @RequestParam String sourceContent
+            @RequestParam String sourceContent,
+            HttpServletRequest request
     ) {
         if (title.isBlank() || sourceContent.isBlank()) {
             return ResponseEntity.badRequest()
                     .body(adminArtifactFormRenderer.render(
                             title,
                             sourceContent,
-                            "Title and Markdown are required"
+                            "Title and Markdown are required",
+                            csrfToken(request)
                     ));
         }
 
@@ -111,7 +115,8 @@ public class AdminArtifactController {
     )
     public ResponseEntity<String> importMarkdown(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "title", required = false) String title
+            @RequestParam(value = "title", required = false) String title,
+            HttpServletRequest request
     ) {
         try {
             Artifact artifact = artifactService.importMarkdownFile(file, title);
@@ -120,7 +125,7 @@ public class AdminArtifactController {
                     .build();
         } catch (InvalidMarkdownImportException exception) {
             return ResponseEntity.badRequest()
-                    .body(adminMarkdownImportRenderer.render(title, exception.getMessage()));
+                    .body(adminMarkdownImportRenderer.render(title, exception.getMessage(), csrfToken(request)));
         }
     }
 
@@ -133,7 +138,8 @@ public class AdminArtifactController {
             @PathVariable Long id,
             @RequestParam String title,
             @RequestParam String sourceContent,
-            @RequestParam String status
+            @RequestParam String status,
+            HttpServletRequest request
     ) {
         if (title.isBlank() || sourceContent.isBlank()) {
             return ResponseEntity.badRequest()
@@ -142,7 +148,8 @@ public class AdminArtifactController {
                             title,
                             sourceContent,
                             status,
-                            "Title and Markdown are required"
+                            "Title and Markdown are required",
+                            csrfToken(request)
                     ));
         }
 
@@ -154,7 +161,8 @@ public class AdminArtifactController {
                             title,
                             sourceContent,
                             status,
-                            "Status must be draft or published"
+                            "Status must be draft or published",
+                            csrfToken(request)
                     ));
         }
 
@@ -174,6 +182,11 @@ public class AdminArtifactController {
         return ResponseEntity.status(303)
                 .header(HttpHeaders.LOCATION, URI.create("/admin/artifacts").toString())
                 .build();
+    }
+
+    private String csrfToken(HttpServletRequest request) {
+        CsrfToken token = (CsrfToken) request.getAttribute("_csrf");
+        return token != null ? token.getToken() : "";
     }
 
     private Artifact.Status parseStatus(String status) {

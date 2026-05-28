@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -16,6 +17,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -30,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@WithMockUser
 class ArtifactControllerTest {
 
     @Autowired
@@ -81,7 +84,8 @@ class ArtifactControllerTest {
 
         mockMvc.perform(multipart("/api/artifacts/import/markdown")
                         .file(file)
-                        .param("title", "Imported From MacDown"))
+                        .param("title", "Imported From MacDown")
+                        .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Imported From MacDown"))
                 .andExpect(jsonPath("$.slug").value("imported-from-macdown"))
@@ -95,7 +99,8 @@ class ArtifactControllerTest {
         MockMultipartFile file = markdownFile("MacDown Export.md", "# Filename Notes");
 
         mockMvc.perform(multipart("/api/artifacts/import/markdown")
-                        .file(file))
+                        .file(file)
+                        .with(csrf()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("MacDown Export"))
                 .andExpect(jsonPath("$.slug").value("macdown-export"));
@@ -111,7 +116,8 @@ class ArtifactControllerTest {
         );
 
         mockMvc.perform(multipart("/api/artifacts/import/markdown")
-                        .file(file))
+                        .file(file)
+                        .with(csrf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_MARKDOWN_FILE"))
                 .andExpect(jsonPath("$.message").value("Only .md files are supported"));
@@ -122,7 +128,8 @@ class ArtifactControllerTest {
         MockMultipartFile file = markdownFile("empty.md", "");
 
         mockMvc.perform(multipart("/api/artifacts/import/markdown")
-                        .file(file))
+                        .file(file)
+                        .with(csrf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_MARKDOWN_FILE"))
                 .andExpect(jsonPath("$.message").value("Markdown file is required"));
@@ -139,7 +146,8 @@ class ArtifactControllerTest {
         );
 
         mockMvc.perform(multipart("/api/artifacts/import/markdown")
-                        .file(file))
+                        .file(file)
+                        .with(csrf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("INVALID_MARKDOWN_FILE"))
                 .andExpect(jsonPath("$.message").value("Markdown file must be 2MB or smaller"));
@@ -166,6 +174,7 @@ class ArtifactControllerTest {
     @Test
     void rejectMalformedJson() throws Exception {
         mockMvc.perform(post("/api/artifacts")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":"))
                 .andExpect(status().isBadRequest())
@@ -184,6 +193,7 @@ class ArtifactControllerTest {
     @Test
     void rejectUnsupportedMethod() throws Exception {
         mockMvc.perform(patch("/api/artifacts/{id}", 1)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isMethodNotAllowed())
@@ -194,6 +204,7 @@ class ArtifactControllerTest {
     @Test
     void rejectUnsupportedContentType() throws Exception {
         mockMvc.perform(post("/api/artifacts")
+                        .with(csrf())
                         .contentType(MediaType.TEXT_PLAIN)
                         .content("title=Plain Text"))
                 .andExpect(status().isUnsupportedMediaType())
@@ -272,6 +283,7 @@ class ArtifactControllerTest {
         Integer draftArtifactId = artifactIdFrom(draftResult);
 
         mockMvc.perform(put("/api/artifacts/{id}/status", draftArtifactId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(statusJson("draft")))
                 .andExpect(status().isOk());
@@ -303,6 +315,7 @@ class ArtifactControllerTest {
         Integer artifactId = artifactIdFrom(result);
 
         mockMvc.perform(put("/api/artifacts/{id}", artifactId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(artifactJson("Updated Notes", "# Updated Notes")))
                 .andExpect(status().isOk())
@@ -323,6 +336,7 @@ class ArtifactControllerTest {
         Integer artifactId = artifactIdFrom(result);
 
         mockMvc.perform(put("/api/artifacts/{id}/status", artifactId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(statusJson("draft")))
                 .andExpect(status().isOk())
@@ -338,7 +352,8 @@ class ArtifactControllerTest {
 
         Integer artifactId = artifactIdFrom(result);
 
-        mockMvc.perform(delete("/api/artifacts/{id}", artifactId))
+        mockMvc.perform(delete("/api/artifacts/{id}", artifactId)
+                        .with(csrf()))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/artifacts/{id}", artifactId))
@@ -372,6 +387,7 @@ class ArtifactControllerTest {
         Integer draftArtifactId = artifactIdFrom(draftResult);
 
         mockMvc.perform(put("/api/artifacts/{id}/status", draftArtifactId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(statusJson("draft")))
                 .andExpect(status().isOk());
@@ -406,6 +422,7 @@ class ArtifactControllerTest {
     @Test
     void createArtifactFromAdminForm() throws Exception {
         mockMvc.perform(post("/admin/artifacts")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("title", "Admin Form Notes")
                         .param("sourceContent", "# Admin Form Notes"))
@@ -422,6 +439,7 @@ class ArtifactControllerTest {
     @Test
     void rejectBlankAdminArtifactForm() throws Exception {
         mockMvc.perform(post("/admin/artifacts")
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("title", "")
                         .param("sourceContent", ""))
@@ -448,7 +466,8 @@ class ArtifactControllerTest {
 
         MvcResult result = mockMvc.perform(multipart("/admin/artifacts/import/markdown")
                         .file(file)
-                        .param("title", "Admin Imported Notes"))
+                        .param("title", "Admin Imported Notes")
+                        .with(csrf()))
                 .andExpect(status().isSeeOther())
                 .andReturn();
 
@@ -473,7 +492,8 @@ class ArtifactControllerTest {
 
         mockMvc.perform(multipart("/admin/artifacts/import/markdown")
                         .file(file)
-                        .param("title", "Bad Import"))
+                        .param("title", "Bad Import")
+                        .with(csrf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Only .md files are supported")))
@@ -531,6 +551,7 @@ class ArtifactControllerTest {
         Integer artifactId = artifactIdFrom(result);
 
         mockMvc.perform(post("/admin/artifacts/{id}/delete", artifactId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED))
                 .andExpect(status().isSeeOther())
                 .andExpect(redirectedUrl("/admin/artifacts"));
@@ -569,6 +590,7 @@ class ArtifactControllerTest {
         Integer artifactId = artifactIdFrom(result);
 
         mockMvc.perform(post("/admin/artifacts/{id}", artifactId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("title", "Admin Updated Notes")
                         .param("sourceContent", "# Admin Updated Notes")
@@ -593,6 +615,7 @@ class ArtifactControllerTest {
         Integer artifactId = artifactIdFrom(result);
 
         mockMvc.perform(post("/admin/artifacts/{id}", artifactId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("title", "")
                         .param("sourceContent", "")
@@ -612,6 +635,7 @@ class ArtifactControllerTest {
         Integer artifactId = artifactIdFrom(result);
 
         mockMvc.perform(post("/admin/artifacts/{id}", artifactId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("title", "Invalid Status Notes")
                         .param("sourceContent", "# Invalid Status Notes")
@@ -667,6 +691,7 @@ class ArtifactControllerTest {
         Integer artifactId = artifactIdFrom(result);
 
         mockMvc.perform(put("/api/artifacts/{id}/status", artifactId)
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(statusJson("draft")))
                 .andExpect(status().isOk());
@@ -680,6 +705,7 @@ class ArtifactControllerTest {
             String sourceContent
     ) throws Exception {
         return mockMvc.perform(post("/api/artifacts")
+                .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(artifactJson(title, sourceContent)));
     }

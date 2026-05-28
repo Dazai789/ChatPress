@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AdminMarkdownImportRenderer {
 
-    public String render(String title, String errorMessage) {
+    public String render(String title, String errorMessage, String csrfToken) {
         return """
                 <!doctype html>
                 <html lang="en">
@@ -127,6 +127,7 @@ public class AdminMarkdownImportRenderer {
                     <main class="shell">
                         %s
                         <form method="post" action="/admin/artifacts/import/markdown" enctype="multipart/form-data">
+                            <input type="hidden" name="_csrf" value="%s">
                             <div class="field">
                                 <label for="file">Markdown file</label>
                                 <input id="file" name="file" type="file" accept=".md,text/markdown,text/plain" required>
@@ -145,6 +146,7 @@ public class AdminMarkdownImportRenderer {
                 </html>
                 """.formatted(
                 renderError(errorMessage),
+                escapeHtml(csrfToken),
                 escapeHtml(title)
         );
     }

@@ -213,15 +213,19 @@ MYSQL_PASSWORD
 
 ## 9. 后续可能新增的数据结构
 
-V1 暂时不新增表，继续围绕 `Artifact` 完成 Markdown 导入和 HTML 渲染。
+以下数据结构可以配合后续功能继续补充：
 
-后续版本如果支持 AI 聊天记录、标签、版本或附件，可能新增：
+### User
+- `User` 实体：id, username, password(BCrypt), email, role(USER/ADMIN), createdAt
+- `Artifact.createdBy`：关联 User，实现用户隔离
 
+### Media 和日志
+- `Artifact.coverImageUrl`：文章封面图
+- 操作日志表（AOP 切面记录）：操作人、操作内容、参数、耗时
+
+### V2/V3 可能新增
 - `ChatMessage`
 - `ArtifactVersion`
 - `Tag`
 - `ArtifactTag`
 - `Asset`
-- `User`
-
-当前阶段继续保持单表，避免过早复杂化。
