@@ -1,5 +1,6 @@
 package com.chatpress.security;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
@@ -22,7 +23,7 @@ public class JwtUtil {
         if (secret.getBytes().length < 32) {
             throw new IllegalArgumentException("jwt.secret must be at least 32 bytes for HS256");
         }
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMs = expirationMs;
     }
 

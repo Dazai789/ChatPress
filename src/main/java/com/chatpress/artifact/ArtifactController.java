@@ -7,6 +7,7 @@ import com.chatpress.artifact.dto.ArtifactPageResponse;
 import com.chatpress.artifact.dto.ArtifactResponse;
 import com.chatpress.artifact.dto.ArtifactStatusRequest;
 import com.chatpress.artifact.dto.ArtifactSummaryResponse;
+import com.chatpress.common.annotation.RateLimit;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -36,6 +37,7 @@ public class ArtifactController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @RateLimit(maxRequests = 120, windowSeconds = 60)
     public ArtifactResponse createArtifact(@Valid @RequestBody ArtifactRequest request) {
         Artifact artifact = artifactService.createArtifact(
                 request.title(),
@@ -47,6 +49,7 @@ public class ArtifactController {
 
     @PostMapping(value = "/import/markdown", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
+    @RateLimit(maxRequests = 30, windowSeconds = 60)
     public ArtifactResponse importMarkdownFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "title", required = false) String title
@@ -73,6 +76,7 @@ public class ArtifactController {
     }
 
     @PutMapping("/{id}")
+    @RateLimit(maxRequests = 120, windowSeconds = 60)
     public ArtifactResponse updateArtifact(
             @PathVariable Long id,
             @Valid @RequestBody ArtifactRequest request
@@ -87,6 +91,7 @@ public class ArtifactController {
     }
 
     @PutMapping("/{id}/status")
+    @RateLimit(maxRequests = 60, windowSeconds = 60)
     public ArtifactResponse updateArtifactStatus(
             @PathVariable Long id,
             @Valid @RequestBody ArtifactStatusRequest request
@@ -96,6 +101,7 @@ public class ArtifactController {
     }
 
     @DeleteMapping("/{id}")
+    @RateLimit(maxRequests = 30, windowSeconds = 60)
     public ResponseEntity<Void> deleteArtifact(@PathVariable Long id) {
         artifactService.deleteArtifactOrThrow(id, currentUsername());
         return ResponseEntity.noContent().build();

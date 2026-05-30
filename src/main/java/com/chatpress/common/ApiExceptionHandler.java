@@ -6,6 +6,7 @@ import com.chatpress.artifact.exception.ArtifactNotFoundException;
 import com.chatpress.artifact.exception.InvalidArtifactQueryException;
 import com.chatpress.artifact.exception.InvalidMarkdownImportException;
 import com.chatpress.common.exception.RateLimitExceededException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -104,5 +105,11 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException exception) {
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                 .body(new ApiErrorResponse("UNSUPPORTED_MEDIA_TYPE", "Content type is not supported"));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiErrorResponse("DATA_CONFLICT", "A conflicting resource already exists. Please try again."));
     }
 }

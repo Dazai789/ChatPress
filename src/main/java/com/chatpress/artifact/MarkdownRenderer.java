@@ -36,7 +36,9 @@ public class MarkdownRenderer {
     private final Safelist safelist = Safelist.relaxed()
             .addTags("del")
             .addTags("input")
-            .addAttributes("input", "type", "checked", "disabled");
+            .addAttributes("input", "type", "checked", "disabled")
+            .addProtocols("a", "href", "http", "https", "mailto")
+            .addProtocols("img", "src", "http", "https");
 
     private final Document.OutputSettings outputSettings = new Document.OutputSettings()
             .prettyPrint(false);

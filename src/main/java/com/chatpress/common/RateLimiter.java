@@ -18,7 +18,7 @@ public class RateLimiter {
             if (current == null || now - current.windowStart > windowMs) {
                 return new WindowState(1, now);
             }
-            if (current.count >= maxRequests) {
+            if (current.count > maxRequests) {
                 return current;
             }
             return new WindowState(current.count + 1, current.windowStart);

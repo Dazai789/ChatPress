@@ -3,6 +3,8 @@ package com.chatpress.auth;
 import com.chatpress.auth.dto.LoginRequest;
 import com.chatpress.auth.dto.RegisterRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -10,6 +12,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -163,6 +168,46 @@ class AuthControllerTest {
     @Test
     void accessApiWithoutTokenReturnsRedirect() throws Exception {
         mockMvc.perform(get("/api/artifacts"))
+                .andExpect(status().isFound());
+    }
+
+    @Test
+    void accessApiWithExpiredTokenReturnsRedirect() throws Exception {
+        String secret = "chatpress-v1-jwt-secret-key-2026-please-change-in-production";
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+
+        long now = System.currentTimeMillis();
+        String expiredToken = Jwts.builder()
+                .subject("admin")
+                .claim("role", "ADMIN")
+                .issuedAt(new Date(now - 3_600_000))
+                .expiration(new Date(now - 1_800_000))
+                .signWith(key)
+                .compact();
+
+        mockMvc.perform(get("/api/artifacts")
+                        .header("Authorization", "Bearer " + expiredToken))
+                .andExpect(status().isFound());
+    }
+
+    @Test
+    void accessApiWithTamperedTokenReturnsRedirect() throws Exception {
+        // Login to get a valid token, then tamper with it
+        String loginBody = objectMapper.writeValueAsString(
+                new LoginRequest("admin", "admin123"));
+        String response = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String validToken = objectMapper.readTree(response).get("token").asText();
+        String tamperedToken = validToken.substring(0, validToken.length() - 2) + "XX";
+
+        mockMvc.perform(get("/api/artifacts")
+                        .header("Authorization", "Bearer " + tamperedToken))
                 .andExpect(status().isFound());
     }
 }

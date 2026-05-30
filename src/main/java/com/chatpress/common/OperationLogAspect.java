@@ -29,26 +29,26 @@ public class OperationLogAspect {
     public Object logOperation(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
 
-        Object result = joinPoint.proceed();
+        try {
+            return joinPoint.proceed();
+        } finally {
+            long duration = System.currentTimeMillis() - start;
 
-        long duration = System.currentTimeMillis() - start;
+            MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+            Method method = signature.getMethod();
+            LogOperation annotation = method.getAnnotation(LogOperation.class);
 
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
-        LogOperation annotation = method.getAnnotation(LogOperation.class);
+            String username = SecurityContextHolder.getContext().getAuthentication() != null
+                    ? SecurityContextHolder.getContext().getAuthentication().getName()
+                    : "anonymous";
 
-        String username = SecurityContextHolder.getContext().getAuthentication() != null
-                ? SecurityContextHolder.getContext().getAuthentication().getName()
-                : "anonymous";
+            String target = buildTarget(joinPoint.getArgs(), signature.getParameterNames());
 
-        String target = buildTarget(joinPoint.getArgs(), signature.getParameterNames());
-
-        com.chatpress.common.OperationLog log = new com.chatpress.common.OperationLog(
-                username, annotation.value(), target, duration
-        );
-        operationLogRepository.save(log);
-
-        return result;
+            com.chatpress.common.OperationLog log = new com.chatpress.common.OperationLog(
+                    username, annotation.value(), target, duration
+            );
+            operationLogRepository.save(log);
+        }
     }
 
     private String buildTarget(Object[] args, String[] paramNames) {

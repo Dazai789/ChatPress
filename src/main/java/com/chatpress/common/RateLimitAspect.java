@@ -25,7 +25,7 @@ public class RateLimitAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         RateLimit annotation = signature.getMethod().getAnnotation(RateLimit.class);
 
-        String key = getClientIp();
+        String key = getClientIp() + ":" + signature.toShortString();
 
         if (!rateLimiter.allow(key, annotation.maxRequests(), annotation.windowSeconds())) {
             throw new RateLimitExceededException(

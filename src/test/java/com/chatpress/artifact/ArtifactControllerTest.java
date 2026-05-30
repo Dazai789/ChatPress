@@ -1,5 +1,6 @@
 package com.chatpress.artifact;
 
+import com.chatpress.common.OperationLogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,8 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -41,6 +44,9 @@ class ArtifactControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private OperationLogRepository operationLogRepository;
 
     @Test
     void createArtifact() throws Exception {
@@ -772,6 +778,77 @@ class ArtifactControllerTest {
                         .with(user("bob").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isEmpty());
+    }
+
+    @Test
+    void adminFormCreateRecordsOperationLog() throws Exception {
+        long before = operationLogRepository.count();
+
+        mockMvc.perform(post("/admin/artifacts")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("title", "OpLog Create Test")
+                        .param("sourceContent", "# OpLog Create Test"))
+                .andExpect(status().isSeeOther());
+
+        long after = operationLogRepository.count();
+        assertThat(after).isGreaterThan(before);
+
+        // Verify the most recent log entry contains the expected action and target
+        var logs = operationLogRepository.findAllByOrderByCreatedAtDesc(
+                org.springframework.data.domain.PageRequest.of(0, 1));
+        assertThat(logs.getContent()).isNotEmpty();
+        assertThat(logs.getContent().get(0).getAction()).isEqualTo("CREATE_ARTIFACT");
+        assertThat(logs.getContent().get(0).getTarget()).contains("OpLog Create Test");
+    }
+
+    @Test
+    void adminFormDeleteRecordsOperationLog() throws Exception {
+        MvcResult result = createArtifact("OpLog Delete Test", "# OpLog Delete Test")
+                .andExpect(status().isCreated())
+                .andReturn();
+        Integer artifactId = artifactIdFrom(result);
+
+        long before = operationLogRepository.count();
+
+        mockMvc.perform(post("/admin/artifacts/{id}/delete", artifactId)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isSeeOther());
+
+        long after = operationLogRepository.count();
+        assertThat(after).isGreaterThan(before);
+
+        var logs = operationLogRepository.findAllByOrderByCreatedAtDesc(
+                org.springframework.data.domain.PageRequest.of(0, 1));
+        assertThat(logs.getContent()).isNotEmpty();
+        assertThat(logs.getContent().get(0).getAction()).isEqualTo("DELETE_ARTIFACT");
+    }
+
+    @Test
+    void adminLogsPageRenders() throws Exception {
+        // Create an artifact via admin form to generate a log entry
+        mockMvc.perform(post("/admin/artifacts")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("title", "Logs Page Test")
+                        .param("sourceContent", "# Logs Page Test"))
+                .andExpect(status().isSeeOther());
+
+        mockMvc.perform(get("/admin/logs"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Operation Logs - Admin</title>")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("CREATE_ARTIFACT")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Logs Page Test")));
+    }
+
+    @Test
+    void adminLogsPageShowsEmptyState() throws Exception {
+        mockMvc.perform(get("/admin/logs"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Operation Logs - Admin</title>")));
     }
 
     private ResultActions createArtifact(
