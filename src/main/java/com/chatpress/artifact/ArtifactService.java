@@ -31,13 +31,16 @@ public class ArtifactService {
     private final ArtifactRepository artifactRepository;
     private final TagRepository tagRepository;
     private final MarkdownRenderer markdownRenderer;
+    private final PublicPageCache publicPageCache;
 
     public ArtifactService(ArtifactRepository artifactRepository,
                            TagRepository tagRepository,
-                           MarkdownRenderer markdownRenderer) {
+                           MarkdownRenderer markdownRenderer,
+                           PublicPageCache publicPageCache) {
         this.artifactRepository = artifactRepository;
         this.tagRepository = tagRepository;
         this.markdownRenderer = markdownRenderer;
+        this.publicPageCache = publicPageCache;
     }
 
     @Transactional
@@ -130,14 +133,18 @@ public class ArtifactService {
         artifact.setSourceContent(sourceContent);
         artifact.setRenderedHtml(markdownRenderer.render(sourceContent));
         artifact.setTags(resolveTags(tagNames));
-        return artifactRepository.save(artifact);
+        Artifact saved = artifactRepository.save(artifact);
+        publicPageCache.evict(saved.getSlug());
+        return saved;
     }
 
     @Transactional
     public Artifact updateArtifactStatusOrThrow(Long id, Artifact.Status status, String username) {
         Artifact artifact = getArtifactOrThrow(id, username);
         artifact.setStatus(status);
-        return artifactRepository.save(artifact);
+        Artifact saved = artifactRepository.save(artifact);
+        publicPageCache.evict(saved.getSlug());
+        return saved;
     }
 
     @Transactional
@@ -148,12 +155,15 @@ public class ArtifactService {
         artifact.setRenderedHtml(markdownRenderer.render(sourceContent));
         artifact.setStatus(status);
         artifact.setTags(resolveTags(tagNames));
-        return artifactRepository.save(artifact);
+        Artifact saved = artifactRepository.save(artifact);
+        publicPageCache.evict(saved.getSlug());
+        return saved;
     }
 
     @Transactional
     public void deleteArtifactOrThrow(Long id, String username) {
-        getArtifactOrThrow(id, username);
+        Artifact artifact = getArtifactOrThrow(id, username);
+        publicPageCache.evict(artifact.getSlug());
         artifactRepository.deleteById(id);
     }
 

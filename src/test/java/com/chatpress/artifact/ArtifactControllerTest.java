@@ -48,6 +48,9 @@ class ArtifactControllerTest {
     @Autowired
     private OperationLogRepository operationLogRepository;
 
+    @Autowired
+    private PublicPageCache publicPageCache;
+
     @Test
     void createArtifact() throws Exception {
         createArtifact("Java Notes", "# Java Notes")
@@ -849,6 +852,91 @@ class ArtifactControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("<title>Operation Logs - Admin</title>")));
+    }
+
+    @Test
+    void publicPageCacheHit() throws Exception {
+        createArtifact("Cache Test", "# Cache Test")
+                .andExpect(status().isCreated());
+
+        // First request: cache miss, should populate cache
+        mockMvc.perform(get("/p/cache-test"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("<h1>Cache Test</h1>")));
+
+        // Verify cache has the entry
+        String cached = publicPageCache.get("cache-test");
+        assertThat(cached).isNotNull();
+        assertThat(cached).contains("<h1>Cache Test</h1>");
+    }
+
+    @Test
+    void publicPageCacheInvalidatedOnUpdate() throws Exception {
+        MvcResult result = createArtifact("Cache Update", "# Before Update")
+                .andExpect(status().isCreated())
+                .andReturn();
+        Integer artifactId = artifactIdFrom(result);
+
+        // Populate cache
+        mockMvc.perform(get("/p/cache-update"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Before Update")));
+
+        // Update artifact (via JSON API)
+        mockMvc.perform(put("/api/artifacts/{id}", artifactId)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(artifactJson("Cache Update", "# After Update")))
+                .andExpect(status().isOk());
+
+        // Cache should be evicted, new request gets fresh content
+        mockMvc.perform(get("/p/cache-update"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("After Update")));
+    }
+
+    @Test
+    void publicPageCacheInvalidatedOnDelete() throws Exception {
+        MvcResult result = createArtifact("Cache Delete", "# Delete Me")
+                .andExpect(status().isCreated())
+                .andReturn();
+        Integer artifactId = artifactIdFrom(result);
+
+        // Populate cache
+        mockMvc.perform(get("/p/cache-delete"))
+                .andExpect(status().isOk());
+
+        // Delete artifact
+        mockMvc.perform(delete("/api/artifacts/{id}", artifactId)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        // Cache evicted, page returns 404
+        mockMvc.perform(get("/p/cache-delete"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void draftContentNotCachedAsPublic() throws Exception {
+        MvcResult result = createArtifact("Draft Cache Test", "# Draft Cache")
+                .andExpect(status().isCreated())
+                .andReturn();
+        Integer artifactId = artifactIdFrom(result);
+
+        // Set to draft
+        mockMvc.perform(put("/api/artifacts/{id}/status", artifactId)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(statusJson("draft")))
+                .andExpect(status().isOk());
+
+        // Draft should return 404
+        mockMvc.perform(get("/p/draft-cache-test"))
+                .andExpect(status().isNotFound());
+
+        // Cache should NOT contain draft content
+        String cached = publicPageCache.get("draft-cache-test");
+        assertThat(cached).isNull();
     }
 
     private ResultActions createArtifact(

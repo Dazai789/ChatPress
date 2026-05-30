@@ -15,16 +15,29 @@ public class PublicPageController {
 
     private final ArtifactService artifactService;
     private final PublicPageRenderer publicPageRenderer;
+    private final PublicPageCache cache;
 
-    public PublicPageController(ArtifactService artifactService, PublicPageRenderer publicPageRenderer) {
+    public PublicPageController(ArtifactService artifactService,
+                                PublicPageRenderer publicPageRenderer,
+                                PublicPageCache cache) {
         this.artifactService = artifactService;
         this.publicPageRenderer = publicPageRenderer;
+        this.cache = cache;
     }
 
     @GetMapping(value = "/p/{slug}", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> getPublicPage(@PathVariable String slug) {
+        String cached = cache.get(slug);
+        if (cached != null) {
+            return ResponseEntity.ok(cached);
+        }
+
         return artifactService.getPublishedArtifactBySlug(slug)
-                .map(artifact -> ResponseEntity.ok(publicPageRenderer.render(artifact)))
+                .map(artifact -> {
+                    String html = publicPageRenderer.render(artifact);
+                    cache.put(slug, html);
+                    return ResponseEntity.ok(html);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 }
