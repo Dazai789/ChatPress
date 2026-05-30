@@ -6,18 +6,21 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
 @Aspect
 @Component
 public class OperationLogAspect {
+
+    private static final Logger log = LoggerFactory.getLogger(OperationLogAspect.class);
 
     private final OperationLogRepository operationLogRepository;
 
@@ -44,10 +47,14 @@ public class OperationLogAspect {
 
             String target = buildTarget(joinPoint.getArgs(), signature.getParameterNames());
 
-            com.chatpress.common.OperationLog log = new com.chatpress.common.OperationLog(
+            com.chatpress.common.OperationLog logEntry = new com.chatpress.common.OperationLog(
                     username, annotation.value(), target, duration
             );
-            operationLogRepository.save(log);
+            try {
+                operationLogRepository.save(logEntry);
+            } catch (Exception e) {
+                log.error("Failed to save operation log: {}", e.getMessage(), e);
+            }
         }
     }
 

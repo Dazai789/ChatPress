@@ -41,6 +41,8 @@ import java.net.URI;
 @RestController
 public class AdminArtifactController {
 
+    private static final Logger log = LoggerFactory.getLogger(AdminArtifactController.class);
+
     private final ArtifactService artifactService;
     private final AdminPageRenderer adminPageRenderer;
     private final AdminFormRenderer adminFormRenderer;
@@ -283,7 +285,6 @@ public class AdminArtifactController {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleUnexpected(Exception exception) {
-        Logger log = LoggerFactory.getLogger(AdminArtifactController.class);
         log.error("Unexpected admin error: {}", exception.getMessage(), exception);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .contentType(MediaType.TEXT_HTML)
