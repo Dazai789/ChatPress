@@ -121,6 +121,16 @@ public class ArtifactService {
     }
 
     @Transactional
+    public Artifact updateArtifactWithStatusOrThrow(Long id, String title, String sourceContent, Artifact.Status status, String username) {
+        Artifact artifact = getArtifactOrThrow(id, username);
+        artifact.setTitle(title);
+        artifact.setSourceContent(sourceContent);
+        artifact.setRenderedHtml(markdownRenderer.render(sourceContent));
+        artifact.setStatus(status);
+        return artifactRepository.save(artifact);
+    }
+
+    @Transactional
     public void deleteArtifactOrThrow(Long id, String username) {
         getArtifactOrThrow(id, username);
         artifactRepository.deleteById(id);

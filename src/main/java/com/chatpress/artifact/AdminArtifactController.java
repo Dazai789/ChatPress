@@ -206,8 +206,7 @@ public class AdminArtifactController {
                     ));
         }
 
-        artifactService.updateArtifactOrThrow(id, title.trim(), sourceContent, currentUsername());
-        artifactService.updateArtifactStatusOrThrow(id, artifactStatus, currentUsername());
+        artifactService.updateArtifactWithStatusOrThrow(id, title.trim(), sourceContent, artifactStatus, currentUsername());
         return ResponseEntity.status(303)
                 .header(HttpHeaders.LOCATION, URI.create("/admin/artifacts/" + id).toString())
                 .build();
