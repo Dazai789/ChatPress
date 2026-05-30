@@ -42,6 +42,7 @@ public class ArtifactController {
         Artifact artifact = artifactService.createArtifact(
                 request.title(),
                 request.sourceContent(),
+                request.tags(),
                 SecurityUtils.currentUsername()
         );
         return ArtifactResponse.from(artifact);
@@ -62,10 +63,11 @@ public class ArtifactController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String q,
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String tag
     ) {
         return ArtifactPageResponse.from(
-                artifactService.listArtifacts(page, size, q, status, SecurityUtils.currentUsername())
+                artifactService.listArtifacts(page, size, q, status, tag, SecurityUtils.currentUsername())
                         .map(ArtifactSummaryResponse::from)
         );
     }
@@ -85,6 +87,7 @@ public class ArtifactController {
                 id,
                 request.title(),
                 request.sourceContent(),
+                request.tags(),
                 SecurityUtils.currentUsername()
         );
         return ArtifactResponse.from(artifact);

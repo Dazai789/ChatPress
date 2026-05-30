@@ -27,7 +27,7 @@ class ArtifactServiceTransactionTest {
 
     @Test
     void createArtifactIsCommitted() {
-        Artifact artifact = artifactService.createArtifact("Tx Test", "# Tx Test", "tester");
+        Artifact artifact = artifactService.createArtifact("Tx Test", "# Tx Test", null, "tester");
 
         Artifact found = artifactRepository.findById(artifact.getId()).orElseThrow();
         assertThat(found.getTitle()).isEqualTo("Tx Test");
@@ -59,7 +59,7 @@ class ArtifactServiceTransactionTest {
 
     @Test
     void deleteArtifactIsCommitted() {
-        Artifact artifact = artifactService.createArtifact("Delete Tx", "# Delete Tx", "tester");
+        Artifact artifact = artifactService.createArtifact("Delete Tx", "# Delete Tx", null, "tester");
         Long id = artifact.getId();
 
         artifactService.deleteArtifactOrThrow(id, "tester");
@@ -69,12 +69,9 @@ class ArtifactServiceTransactionTest {
 
     @Test
     void v4MigrationIndexesApplied() {
-        // Execute a query that would use the (status, created_at) index
-        // If the migration failed, the index wouldn't exist, but queries would still work
-        // This test verifies the V4 migration didn't break anything
-        artifactService.createArtifact("Index Test", "# Index Test", "tester");
+        artifactService.createArtifact("Index Test", "# Index Test", null, "tester");
 
-        var results = artifactService.listArtifacts(0, 10, "Index", "published", "tester");
+        var results = artifactService.listArtifacts(0, 10, "Index", "published", null, "tester");
         assertThat(results.getTotalElements()).isEqualTo(1);
     }
 }

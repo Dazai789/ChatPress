@@ -17,9 +17,10 @@ public class AdminPageRenderer {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public String render(Page<Artifact> artifacts, String q, String status) {
+    public String render(Page<Artifact> artifacts, String q, String status, String tag) {
         String searchValue = normalize(q);
         String statusValue = normalize(status).toLowerCase(Locale.ROOT);
+        String tagValue = normalize(tag).toLowerCase(Locale.ROOT);
         String rows = artifacts.getContent().stream()
                 .map(this::renderRow)
                 .collect(Collectors.joining());
@@ -27,7 +28,7 @@ public class AdminPageRenderer {
         if (rows.isBlank()) {
             rows = """
                     <tr>
-                        <td colspan="5" class="empty">No artifacts found</td>
+                        <td colspan="6" class="empty">No artifacts found</td>
                     </tr>
                     """;
         }
@@ -104,7 +105,7 @@ public class AdminPageRenderer {
 
                         form {
                             display: grid;
-                            grid-template-columns: minmax(180px, 1fr) 180px auto;
+                            grid-template-columns: minmax(140px, 1fr) 140px 140px auto;
                             gap: 10px;
                             margin: 24px 0 18px;
                         }
@@ -187,6 +188,19 @@ public class AdminPageRenderer {
                             color: #92400e;
                         }
 
+                        .tag {
+                            display: inline-block;
+                            padding: 2px 7px;
+                            border-radius: 999px;
+                            background: #e0f2f1;
+                            color: #0f766e;
+                            font-size: 0.78rem;
+                        }
+
+                        .tags-cell {
+                            max-width: 180px;
+                        }
+
                         .muted,
                         .empty {
                             color: #737373;
@@ -261,6 +275,7 @@ public class AdminPageRenderer {
                     <main class="shell">
                         <form method="get" action="/admin/artifacts">
                             <input type="search" name="q" value="%s" placeholder="Search title">
+                            <input type="text" name="tag" value="%s" placeholder="Tag">
                             <select name="status">
                                 <option value=""%s>All statuses</option>
                                 <option value="published"%s>Published</option>
@@ -272,6 +287,7 @@ public class AdminPageRenderer {
                             <thead>
                                 <tr>
                                     <th>Title</th>
+                                    <th>Tags</th>
                                     <th>Status</th>
                                     <th>Slug</th>
                                     <th>Created</th>
@@ -294,6 +310,7 @@ public class AdminPageRenderer {
                 </html>
                 """.formatted(
                 HtmlUtils.escapeHtml(searchValue),
+                HtmlUtils.escapeHtml(tagValue),
                 selected(statusValue.isBlank()),
                 selected("published".equals(statusValue)),
                 selected("draft".equals(statusValue)),
@@ -301,8 +318,8 @@ public class AdminPageRenderer {
                 artifacts.getNumber() + 1,
                 Math.max(artifacts.getTotalPages(), 1),
                 artifacts.getTotalElements(),
-                previousLink(artifacts, searchValue, statusValue),
-                nextLink(artifacts, searchValue, statusValue)
+                previousLink(artifacts, searchValue, tagValue, statusValue),
+                nextLink(artifacts, searchValue, tagValue, statusValue)
         );
     }
 
@@ -316,9 +333,17 @@ public class AdminPageRenderer {
                 ? "<a href=\"/p/%s\">Open</a>".formatted(HtmlUtils.escapeHtml(artifact.getSlug()))
                 : "<span class=\"muted\">Draft</span>";
 
+        String tagsHtml = artifact.getTags().stream()
+                .map(tag -> "<span class=\"tag\">" + HtmlUtils.escapeHtml(tag.getName()) + "</span>")
+                .collect(Collectors.joining(" "));
+        if (tagsHtml.isBlank()) {
+            tagsHtml = "<span class=\"muted\">—</span>";
+        }
+
         return """
                 <tr>
                     <td>%s</td>
+                    <td class="tags-cell">%s</td>
                     <td><span class="status %s">%s</span></td>
                     <td><code>%s</code></td>
                     <td>%s</td>
@@ -326,6 +351,7 @@ public class AdminPageRenderer {
                 </tr>
                 """.formatted(
                 titleLink,
+                tagsHtml,
                 HtmlUtils.escapeHtml(status),
                 HtmlUtils.escapeHtml(status),
                 HtmlUtils.escapeHtml(artifact.getSlug()),
@@ -334,21 +360,21 @@ public class AdminPageRenderer {
         );
     }
 
-    private String previousLink(Page<Artifact> artifacts, String q, String status) {
+    private String previousLink(Page<Artifact> artifacts, String q, String tag, String status) {
         if (!artifacts.hasPrevious()) {
             return "<span class=\"link-disabled\">Previous</span>";
         }
-        return "<a href=\"%s\">Previous</a>".formatted(adminUrl(artifacts.getNumber() - 1, artifacts.getSize(), q, status));
+        return "<a href=\"%s\">Previous</a>".formatted(adminUrl(artifacts.getNumber() - 1, artifacts.getSize(), q, tag, status));
     }
 
-    private String nextLink(Page<Artifact> artifacts, String q, String status) {
+    private String nextLink(Page<Artifact> artifacts, String q, String tag, String status) {
         if (!artifacts.hasNext()) {
             return "<span class=\"link-disabled\">Next</span>";
         }
-        return "<a href=\"%s\">Next</a>".formatted(adminUrl(artifacts.getNumber() + 1, artifacts.getSize(), q, status));
+        return "<a href=\"%s\">Next</a>".formatted(adminUrl(artifacts.getNumber() + 1, artifacts.getSize(), q, tag, status));
     }
 
-    private String adminUrl(int page, int size, String q, String status) {
+    private String adminUrl(int page, int size, String q, String tag, String status) {
         StringBuilder url = new StringBuilder("/admin/artifacts?page=")
                 .append(page)
                 .append("&size=")
@@ -356,6 +382,10 @@ public class AdminPageRenderer {
 
         if (!q.isBlank()) {
             url.append("&q=").append(encode(q));
+        }
+
+        if (!tag.isBlank()) {
+            url.append("&tag=").append(encode(tag));
         }
 
         if (!status.isBlank()) {

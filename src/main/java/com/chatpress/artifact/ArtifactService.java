@@ -3,6 +3,7 @@ package com.chatpress.artifact;
 import com.chatpress.artifact.exception.ArtifactNotFoundException;
 import com.chatpress.artifact.exception.InvalidArtifactQueryException;
 import com.chatpress.artifact.exception.InvalidMarkdownImportException;
+import jakarta.persistence.criteria.Join;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
@@ -14,8 +15,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class ArtifactService {
@@ -25,19 +29,24 @@ public class ArtifactService {
     private static final int MAX_PAGE_SIZE = 100;
 
     private final ArtifactRepository artifactRepository;
+    private final TagRepository tagRepository;
     private final MarkdownRenderer markdownRenderer;
 
-    public ArtifactService(ArtifactRepository artifactRepository, MarkdownRenderer markdownRenderer) {
+    public ArtifactService(ArtifactRepository artifactRepository,
+                           TagRepository tagRepository,
+                           MarkdownRenderer markdownRenderer) {
         this.artifactRepository = artifactRepository;
+        this.tagRepository = tagRepository;
         this.markdownRenderer = markdownRenderer;
     }
 
     @Transactional
-    public Artifact createArtifact(String title, String sourceContent, String username) {
+    public Artifact createArtifact(String title, String sourceContent, List<String> tagNames, String username) {
         String finalSlug = generateSlug(title);
 
         Artifact artifact = new Artifact(title, finalSlug, sourceContent, markdownRenderer.render(sourceContent), username);
         artifact.setStatus(Artifact.Status.PUBLISHED);
+        artifact.setTags(resolveTags(tagNames));
         return artifactRepository.save(artifact);
     }
 
@@ -54,10 +63,10 @@ public class ArtifactService {
             throw new InvalidMarkdownImportException("Markdown file must not be empty");
         }
 
-        return createArtifact(finalTitle, sourceContent, username);
+        return createArtifact(finalTitle, sourceContent, null, username);
     }
 
-    public Page<Artifact> listArtifacts(int page, int size, String q, String status, String username) {
+    public Page<Artifact> listArtifacts(int page, int size, String q, String status, String tag, String username) {
         PageRequest pageRequest = PageRequest.of(
                 normalizePage(page),
                 normalizePageSize(size),
@@ -75,6 +84,14 @@ public class ArtifactService {
                             "%" + keyword.get().toLowerCase(Locale.ROOT) + "%"
                     )
             );
+        }
+
+        Optional<String> tagFilter = normalizeSearchKeyword(tag);
+        if (tagFilter.isPresent()) {
+            specification = specification.and((root, query, criteriaBuilder) -> {
+                Join<Artifact, Tag> tagJoin = root.join("tags");
+                return criteriaBuilder.equal(tagJoin.get("name"), tagFilter.get().toLowerCase(Locale.ROOT));
+            });
         }
 
         Optional<Artifact.Status> artifactStatus = parseStatus(status);
@@ -105,11 +122,12 @@ public class ArtifactService {
     }
 
     @Transactional
-    public Artifact updateArtifactOrThrow(Long id, String title, String sourceContent, String username) {
+    public Artifact updateArtifactOrThrow(Long id, String title, String sourceContent, List<String> tagNames, String username) {
         Artifact artifact = getArtifactOrThrow(id, username);
         artifact.setTitle(title);
         artifact.setSourceContent(sourceContent);
         artifact.setRenderedHtml(markdownRenderer.render(sourceContent));
+        artifact.setTags(resolveTags(tagNames));
         return artifactRepository.save(artifact);
     }
 
@@ -121,12 +139,13 @@ public class ArtifactService {
     }
 
     @Transactional
-    public Artifact updateArtifactWithStatusOrThrow(Long id, String title, String sourceContent, Artifact.Status status, String username) {
+    public Artifact updateArtifactWithStatusOrThrow(Long id, String title, String sourceContent, List<String> tagNames, Artifact.Status status, String username) {
         Artifact artifact = getArtifactOrThrow(id, username);
         artifact.setTitle(title);
         artifact.setSourceContent(sourceContent);
         artifact.setRenderedHtml(markdownRenderer.render(sourceContent));
         artifact.setStatus(status);
+        artifact.setTags(resolveTags(tagNames));
         return artifactRepository.save(artifact);
     }
 
@@ -251,5 +270,25 @@ public class ArtifactService {
             throw new InvalidArtifactQueryException("Status must be draft or published");
         }
         return result;
+    }
+
+    private Set<Tag> resolveTags(List<String> tagNames) {
+        if (tagNames == null || tagNames.isEmpty()) {
+            return new HashSet<>();
+        }
+        Set<Tag> tags = new HashSet<>();
+        for (String name : tagNames) {
+            if (name == null || name.isBlank()) {
+                continue;
+            }
+            String normalized = name.trim().toLowerCase(Locale.ROOT);
+            if (normalized.length() > 50) {
+                continue;
+            }
+            Tag tag = tagRepository.findByName(normalized)
+                    .orElseGet(() -> tagRepository.save(new Tag(normalized)));
+            tags.add(tag);
+        }
+        return tags;
     }
 }

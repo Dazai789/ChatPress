@@ -22,6 +22,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+
+import java.util.Arrays;
+import java.util.List;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -87,15 +90,16 @@ public class AdminArtifactController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String q,
-            @RequestParam(required = false) String status
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String tag
     ) {
-        Page<Artifact> artifacts = artifactService.listArtifacts(page, size, q, status, SecurityUtils.currentUsername());
-        return adminPageRenderer.render(artifacts, q, status);
+        Page<Artifact> artifacts = artifactService.listArtifacts(page, size, q, status, tag, SecurityUtils.currentUsername());
+        return adminPageRenderer.render(artifacts, q, status, tag);
     }
 
     @GetMapping(value = "/admin/artifacts/new", produces = MediaType.TEXT_HTML_VALUE)
     public String newArtifactForm(HttpServletRequest request) {
-        return adminFormRenderer.render("", "", null, SecurityUtils.csrfToken(request));
+        return adminFormRenderer.render("", "", "", null, SecurityUtils.csrfToken(request));
     }
 
     @GetMapping(value = "/admin/artifacts/import/markdown", produces = MediaType.TEXT_HTML_VALUE)
@@ -130,6 +134,7 @@ public class AdminArtifactController {
     public ResponseEntity<String> createArtifact(
             @RequestParam String title,
             @RequestParam String sourceContent,
+            @RequestParam(required = false) String tags,
             HttpServletRequest request
     ) {
         if (title.isBlank() || sourceContent.isBlank()) {
@@ -137,12 +142,13 @@ public class AdminArtifactController {
                     .body(adminFormRenderer.render(
                             title,
                             sourceContent,
+                            tags,
                             "Title and Markdown are required",
                             SecurityUtils.csrfToken(request)
                     ));
         }
 
-        artifactService.createArtifact(title.trim(), sourceContent, SecurityUtils.currentUsername());
+        artifactService.createArtifact(title.trim(), sourceContent, parseTagNames(tags), SecurityUtils.currentUsername());
         return ResponseEntity.status(303)
                 .header(HttpHeaders.LOCATION, URI.create("/admin/artifacts").toString())
                 .build();
@@ -181,6 +187,7 @@ public class AdminArtifactController {
             @RequestParam String title,
             @RequestParam String sourceContent,
             @RequestParam String status,
+            @RequestParam(required = false) String tags,
             HttpServletRequest request
     ) {
         if (title.isBlank() || sourceContent.isBlank()) {
@@ -190,6 +197,7 @@ public class AdminArtifactController {
                             title,
                             sourceContent,
                             status,
+                            tags,
                             "Title and Markdown are required",
                             SecurityUtils.csrfToken(request)
                     ));
@@ -203,12 +211,13 @@ public class AdminArtifactController {
                             title,
                             sourceContent,
                             status,
+                            tags,
                             "Status must be draft or published",
                             SecurityUtils.csrfToken(request)
                     ));
         }
 
-        artifactService.updateArtifactWithStatusOrThrow(id, title.trim(), sourceContent, artifactStatus, SecurityUtils.currentUsername());
+        artifactService.updateArtifactWithStatusOrThrow(id, title.trim(), sourceContent, parseTagNames(tags), artifactStatus, SecurityUtils.currentUsername());
         return ResponseEntity.status(303)
                 .header(HttpHeaders.LOCATION, URI.create("/admin/artifacts/" + id).toString())
                 .build();
@@ -228,6 +237,16 @@ public class AdminArtifactController {
 
     private Artifact.Status parseStatus(String status) {
         return Artifact.Status.fromString(status).orElse(null);
+    }
+
+    private List<String> parseTagNames(String tags) {
+        if (tags == null || tags.isBlank()) {
+            return null;
+        }
+        return Arrays.stream(tags.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
     }
 
     @ExceptionHandler(ArtifactNotFoundException.class)

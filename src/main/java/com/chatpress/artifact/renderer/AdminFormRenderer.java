@@ -10,11 +10,11 @@ import java.util.Locale;
 @Component
 public class AdminFormRenderer {
 
-    public String render(String title, String sourceContent, String errorMessage, String csrfToken) {
-        return renderNew(title, sourceContent, errorMessage, csrfToken);
+    public String render(String title, String sourceContent, String tags, String errorMessage, String csrfToken) {
+        return renderNew(title, sourceContent, tags, errorMessage, csrfToken);
     }
 
-    public String renderNew(String title, String sourceContent, String errorMessage, String csrfToken) {
+    public String renderNew(String title, String sourceContent, String tags, String errorMessage, String csrfToken) {
         return renderForm(
                 "New Artifact",
                 "New Artifact - Admin",
@@ -22,6 +22,7 @@ public class AdminFormRenderer {
                 "/admin/artifacts",
                 title,
                 sourceContent,
+                tags != null ? tags : "",
                 "published",
                 false,
                 errorMessage,
@@ -30,17 +31,21 @@ public class AdminFormRenderer {
     }
 
     public String renderEdit(Artifact artifact, String errorMessage, String csrfToken) {
+        String tagNames = artifact.getTags().stream()
+                .map(tag -> tag.getName())
+                .collect(java.util.stream.Collectors.joining(", "));
         return renderEdit(
                 artifact.getId(),
                 artifact.getTitle(),
                 artifact.getSourceContent(),
                 artifact.getStatus().name().toLowerCase(Locale.ROOT),
+                tagNames,
                 errorMessage,
                 csrfToken
         );
     }
 
-    public String renderEdit(Long artifactId, String title, String sourceContent, String status, String errorMessage, String csrfToken) {
+    public String renderEdit(Long artifactId, String title, String sourceContent, String status, String tags, String errorMessage, String csrfToken) {
         return renderForm(
                 "Edit Artifact",
                 "Edit Artifact - Admin",
@@ -48,6 +53,7 @@ public class AdminFormRenderer {
                 "/admin/artifacts/" + artifactId,
                 title,
                 sourceContent,
+                tags != null ? tags : "",
                 normalizeStatus(status),
                 true,
                 errorMessage,
@@ -62,6 +68,7 @@ public class AdminFormRenderer {
             String cancelHref,
             String title,
             String sourceContent,
+            String tags,
             String status,
             boolean showStatus,
             String errorMessage,
@@ -205,6 +212,10 @@ public class AdminFormRenderer {
                                 <label for="sourceContent">Markdown</label>
                                 <textarea id="sourceContent" name="sourceContent" required>%s</textarea>
                             </div>
+                            <div class="field">
+                                <label for="tags">Tags (comma-separated)</label>
+                                <input id="tags" name="tags" value="%s" maxlength="200" placeholder="e.g. java, spring, tutorial">
+                            </div>
                             %s
                             <div class="actions">
                                 <button type="submit">Save</button>
@@ -222,6 +233,7 @@ public class AdminFormRenderer {
                 HtmlUtils.escapeHtml(csrfToken),
                 HtmlUtils.escapeHtml(title),
                 HtmlUtils.escapeHtml(sourceContent),
+                HtmlUtils.escapeHtml(tags),
                 renderStatusField(status, showStatus),
                 HtmlUtils.escapeHtml(cancelHref)
         );
