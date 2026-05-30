@@ -15,6 +15,8 @@ import com.chatpress.common.OperationLog;
 import com.chatpress.common.OperationLogRepository;
 import com.chatpress.common.SecurityUtils;
 import com.chatpress.common.annotation.LogOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -273,6 +275,38 @@ public class AdminArtifactController {
                         <body>
                             <h1>404</h1>
                             <p>Artifact not found.</p>
+                            <p><a href="/admin/artifacts">Back to list</a></p>
+                        </body>
+                        </html>
+                        """);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<String> handleUnexpected(Exception exception) {
+        Logger log = LoggerFactory.getLogger(AdminArtifactController.class);
+        log.error("Unexpected admin error: {}", exception.getMessage(), exception);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.TEXT_HTML)
+                .body("""
+                        <!doctype html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="utf-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1">
+                            <title>Error - Admin</title>
+                            <style>
+                                body {
+                                    margin: 0; padding: 56px 20px;
+                                    background: #f5f5f2; color: #242424;
+                                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                                    text-align: center;
+                                }
+                                a { color: #0f766e; }
+                            </style>
+                        </head>
+                        <body>
+                            <h1>500</h1>
+                            <p>An unexpected error occurred. Please try again.</p>
                             <p><a href="/admin/artifacts">Back to list</a></p>
                         </body>
                         </html>
