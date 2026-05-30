@@ -78,10 +78,12 @@ public class ArtifactService {
 
         Optional<String> keyword = normalizeSearchKeyword(q);
         if (keyword.isPresent()) {
+            String lowerPattern = "%" + keyword.get().toLowerCase(Locale.ROOT) + "%";
+            String rawPattern = "%" + keyword.get() + "%";
             specification = specification.and((root, query, criteriaBuilder) ->
-                    criteriaBuilder.like(
-                            criteriaBuilder.lower(root.get("title")),
-                            "%" + keyword.get().toLowerCase(Locale.ROOT) + "%"
+                    criteriaBuilder.or(
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("title")), lowerPattern),
+                            criteriaBuilder.like(root.get("sourceContent"), rawPattern)
                     )
             );
         }
