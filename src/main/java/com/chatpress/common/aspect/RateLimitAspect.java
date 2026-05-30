@@ -1,5 +1,6 @@
-package com.chatpress.common;
+package com.chatpress.common.aspect;
 
+import com.chatpress.common.RateLimiter;
 import com.chatpress.common.annotation.RateLimit;
 import com.chatpress.common.exception.RateLimitExceededException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -2,7 +2,7 @@ package com.chatpress.artifact.renderer;
 
 import com.chatpress.artifact.Artifact;
 
-import com.chatpress.common.HtmlUtils;
+import com.chatpress.common.util.HtmlUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;

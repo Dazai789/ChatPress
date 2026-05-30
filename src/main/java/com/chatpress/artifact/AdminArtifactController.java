@@ -6,7 +6,7 @@ import com.chatpress.artifact.renderer.*;
 import com.chatpress.common.AdminLogRenderer;
 import com.chatpress.common.OperationLog;
 import com.chatpress.common.OperationLogRepository;
-import com.chatpress.common.SecurityUtils;
+import com.chatpress.common.util.SecurityUtils;
 import com.chatpress.common.annotation.LogOperation;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;

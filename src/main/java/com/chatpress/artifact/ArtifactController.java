@@ -7,7 +7,7 @@ import com.chatpress.artifact.dto.ArtifactPageResponse;
 import com.chatpress.artifact.dto.ArtifactResponse;
 import com.chatpress.artifact.dto.ArtifactStatusRequest;
 import com.chatpress.artifact.dto.ArtifactSummaryResponse;
-import com.chatpress.common.SecurityUtils;
+import com.chatpress.common.util.SecurityUtils;
 import com.chatpress.common.annotation.RateLimit;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

@@ -1,4 +1,4 @@
-package com.chatpress.common;
+package com.chatpress.common.util;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.context.SecurityContextHolder;

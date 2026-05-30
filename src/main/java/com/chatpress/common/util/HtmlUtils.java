@@ -1,4 +1,4 @@
-package com.chatpress.common;
+package com.chatpress.common.util;
 
 public final class HtmlUtils {
 

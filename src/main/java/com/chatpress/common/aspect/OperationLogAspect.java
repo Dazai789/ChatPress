@@ -1,5 +1,7 @@
-package com.chatpress.common;
+package com.chatpress.common.aspect;
 
+import com.chatpress.common.OperationLog;
+import com.chatpress.common.OperationLogRepository;
 import com.chatpress.common.annotation.LogOperation;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;

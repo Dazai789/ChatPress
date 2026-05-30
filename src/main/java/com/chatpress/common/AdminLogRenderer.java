@@ -1,7 +1,7 @@
 package com.chatpress.common;
 
 import org.springframework.data.domain.Page;
-import com.chatpress.common.HtmlUtils;
+import com.chatpress.common.util.HtmlUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.format.DateTimeFormatter;
