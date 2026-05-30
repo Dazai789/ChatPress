@@ -13,11 +13,17 @@ export default function Login() {
     e.preventDefault();
     setErr('');
     try {
-      const res = mode === 'login'
-        ? await login(user, pass)
-        : await register(user, pass);
-      localStorage.setItem('token', res.token || '');
-      localStorage.setItem('username', res.username || user);
+      if (mode === 'register') {
+        await register(user, pass);
+        // After register, auto-login to get token
+        const loginRes = await login(user, pass);
+        localStorage.setItem('token', loginRes.token);
+        localStorage.setItem('username', loginRes.username);
+      } else {
+        const res = await login(user, pass);
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('username', res.username);
+      }
       nav('/artifacts');
     } catch (e) {
       setErr(e.response?.data?.message || 'Error');

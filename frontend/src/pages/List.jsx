@@ -9,23 +9,24 @@ export default function List() {
   const [status, setStatus] = useState('');
   const [tag, setTag] = useState('');
 
-  const load = () => {
-    listArtifacts({ page, size: 10, q: q || undefined, status: status || undefined, tag: tag || undefined })
+  const load = (pageNum) => {
+    const p = pageNum ?? page;
+    listArtifacts({ page: p, size: 10, q: q || undefined, status: status || undefined, tag: tag || undefined })
       .then(setData)
       .catch(console.error);
   };
 
-  useEffect(load, [page]);
+  useEffect(() => load(page), [page]);
 
   const del = async (id) => {
     if (!confirm('Delete this artifact?')) return;
     await deleteArtifact(id);
-    load();
+    load(page);
   };
 
   const toggle = async (id, st) => {
     await updateStatus(id, st === 'published' ? 'draft' : 'published');
-    load();
+    load(page);
   };
 
   return (
@@ -42,7 +43,7 @@ export default function List() {
           <option value="published">Published</option>
           <option value="draft">Draft</option>
         </select>
-        <button onClick={() => { setPage(0); load(); }} style={btnPrimary}>Search</button>
+        <button onClick={() => page === 0 ? load(0) : setPage(0)} style={btnPrimary}>Search</button>
       </div>
 
       {/* Pager info */}
